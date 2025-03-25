@@ -1,0 +1,853 @@
+/* استایل‌های عمومی */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* هدر */
+.header {
+    background: linear-gradient(to right, #ff6f61, #ff9f43);
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.header .controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.header select, .header a {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.header select {
+    background-color: #fff;
+    color: #333;
+}
+
+.header a {
+    background-color: #fff;
+    color: #ff6f61;
+    text-decoration: none;
+    position: relative;
+}
+
+.header a:hover, .header select:hover {
+    background-color: #f0f0f0;
+}
+
+.header .cart-count {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background-color: #dc3545;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 0.8rem;
+}
+
+.header .user-info {
+    color: #fff;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* استایل‌های menu.php */
+.filters {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.filters button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    background-color: #e0e0e0;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+.filters button.active, .filters button:hover {
+    background-color: #ff6f61;
+    color: white;
+    transform: scale(1.05);
+}
+
+.menu-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.food-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.food-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+.food-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.food-card .info {
+    padding: 15px;
+}
+
+.food-card h3 {
+    margin: 0 0 10px;
+    font-size: 1.5rem;
+    color: #ff6f61;
+}
+
+.food-card p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.food-card .price {
+    font-weight: bold;
+    color: #333;
+}
+
+.food-card .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.food-card button, .food-card a {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.food-card button {
+    background-color: #ff6f61;
+    color: white;
+}
+
+.food-card a {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.food-card button:hover {
+    background-color: #e65b50;
+}
+
+.food-card a:hover {
+    background-color: #e0e0e0;
+}
+
+/* استایل‌های food_details.php */
+.food-details {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.food-details .main-info {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.food-details .main-image {
+    width: 100%;
+    max-width: 400px;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.food-details .info-text {
+    flex: 1;
+}
+
+.food-details h2 {
+    color: #ff6f61;
+    margin: 0 0 10px;
+    font-size: 2rem;
+}
+
+.food-details .price {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    margin: 10px 0;
+}
+
+.food-details .availability {
+    font-size: 1.1rem;
+    margin: 10px 0;
+}
+
+.food-details .availability.available {
+    color: #28a745;
+}
+
+.food-details .availability.unavailable {
+    color: #dc3545;
+}
+
+.food-details .prep-time {
+    font-size: 1.1rem;
+    color: #666;
+    margin: 10px 0;
+}
+
+.food-details .description, .food-details .ingredients {
+    margin: 15px 0;
+    color: #666;
+    line-height: 1.6;
+}
+
+.food-details .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.food-details .actions button, .food-details .actions a {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+.food-details .actions .quantity-input {
+    padding: 10px;
+    width: 60px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.food-details .actions .add-to-cart {
+    background-color: #ff6f61;
+    color: white;
+}
+
+.food-details .actions .add-to-cart:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.food-details .actions .add-to-cart:hover:not(:disabled) {
+    background-color: #e65b50;
+}
+
+.food-details .actions .share {
+    background-color: #28a745;
+    color: white;
+}
+
+.food-details .actions .share:hover {
+    background-color: #218838;
+}
+
+.food-details .actions .back {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.food-details .actions .back:hover {
+    background-color: #e0e0e0;
+}
+
+.gallery-images {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+}
+
+.gallery-images img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.gallery-images img:hover {
+    transform: scale(1.05);
+}
+
+.reviews, .add-review {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.reviews h3, .add-review h3 {
+    color: #ff6f61;
+    margin: 0 0 15px;
+}
+
+.review-item {
+    border-bottom: 1px solid #eee;
+    padding: 10px 0;
+}
+
+.review-item:last-child {
+    border-bottom: none;
+}
+
+.review-item p {
+    margin: 5px 0;
+}
+
+.add-review form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.add-review label {
+    font-weight: bold;
+}
+
+.add-review select, .add-review textarea {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.add-review textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.add-review button {
+    padding: 10px;
+    background-color: #ff6f61;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.add-review button:hover {
+    background-color: #e65b50;
+}
+
+/* استایل‌های cart.php */
+.cart {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.cart h2 {
+    color: #ff6f61;
+    margin: 0 0 20px;
+}
+
+.cart-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.cart-table th, .cart-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.cart-table th {
+    background-color: #f9f9f9;
+    color: #ff6f61;
+}
+
+.cart-table td {
+    color: #666;
+}
+
+.cart-table .item-name {
+    font-weight: bold;
+    color: #333;
+}
+
+.cart-table .quantity-input {
+    width: 60px;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.cart-table .remove-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.cart-table .remove-btn:hover {
+    background-color: #c82333;
+}
+
+.total {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #333;
+    text-align: right;
+}
+
+.checkout-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #ff6f61;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.checkout-btn:hover {
+    background-color: #e65b50;
+}
+
+.continue-shopping {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #f0f0f0;
+    color: #333;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.continue-shopping:hover {
+    background-color: #e0e0e0;
+}
+
+/* استایل‌های checkout.php */
+.checkout {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.checkout h2 {
+    color: #ff6f61;
+    margin: 0 0 20px;
+}
+
+.order-summary {
+    margin-bottom: 30px;
+}
+
+.order-summary h3 {
+    color: #333;
+    margin: 0 0 15px;
+}
+
+.checkout-form {
+    margin-top: 30px;
+}
+
+.checkout-form h3 {
+    color: #333;
+    margin: 0 0 15px;
+}
+
+.checkout-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.checkout-form label {
+    font-weight: bold;
+}
+
+.checkout-form input, .checkout-form textarea {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.checkout-form textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.checkout-form .error, .checkout-form .success {
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.checkout-form .error {
+    background-color: #f8d7da;
+    color: #dc3545;
+}
+
+.checkout-form .success {
+    background-color: #d4edda;
+    color: #28a745;
+}
+
+.checkout-form button {
+    padding: 10px 20px;
+    background-color: #ff6f61;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.checkout-form button:hover {
+    background-color: #e65b50;
+}
+
+/* استایل‌های user_dashboard.php */
+.dashboard {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.dashboard h2 {
+    color: #ff6f61;
+    margin: 0 0 20px;
+}
+
+.profile, .orders {
+    margin-bottom: 30px;
+}
+
+.profile h3, .orders h3 {
+    color: #333;
+    margin: 0 0 15px;
+}
+
+.profile form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 500px;
+}
+
+.profile label {
+    font-weight: bold;
+}
+
+.profile input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.profile .error, .profile .success {
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.profile .error {
+    background-color: #f8d7da;
+    color: #dc3545;
+}
+
+.profile .success {
+    background-color: #d4edda;
+    color: #28a745;
+}
+
+.profile button {
+    padding: 10px 20px;
+    background-color: #ff6f61;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.profile button:hover {
+    background-color: #e65b50;
+}
+
+.orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.orders-table th, .orders-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.orders-table th {
+    background-color: #f9f9f9;
+    color: #ff6f61;
+}
+
+.orders-table td {
+    color: #666;
+}
+
+/* استایل‌های admin_dashboard.php */
+.orders, .manage-foods, .add-food {
+    margin-bottom: 30px;
+}
+
+.orders h3, .manage-foods h3, .add-food h3 {
+    color: #333;
+    margin: 0 0 15px;
+}
+
+.foods-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.foods-table th, .foods-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.foods-table th {
+    background-color: #f9f9f9;
+    color: #ff6f61;
+}
+
+.foods-table td {
+    color: #666;
+}
+
+.orders-table form, .foods-table form {
+    display: inline;
+}
+
+.orders-table select, .foods-table input, .add-food input, .add-food textarea, .add-food select {
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.orders-table button, .foods-table button, .add-food button {
+    padding: 5px 10px;
+    background-color: #ff6f61;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.orders-table button:hover, .foods-table button:hover, .add-food button:hover {
+    background-color: #e65b50;
+}
+
+.foods-table .delete-btn {
+    background-color: #dc3545;
+}
+
+.foods-table .delete-btn:hover {
+    background-color: #c82333;
+}
+
+.add-food form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 500px;
+}
+
+.add-food label {
+    font-weight: bold;
+}
+
+.add-food textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+/* استایل‌های admin_login.php */
+body.admin-login {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.login-box {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+}
+
+.login-box h2 {
+    color: #ff6f61;
+    text-align: center;
+}
+
+.login-box form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.login-box input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.login-box button {
+    padding: 10px;
+    background-color: #ff6f61;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.login-box button:hover {
+    background-color: #e65b50;
+}
+
+.login-box .error {
+    color: #dc3545;
+    text-align: center;
+}
+
+/* استایل نوتیفیکیشن */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #28a745;
+    color: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    display: none;
+    z-index: 2000;
+}
+
+.notification.show {
+    display: block;
+}
+
+/* ریسپانسیو */
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 1.5rem;
+    }
+
+    .header .controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .menu-items {
+        grid-template-columns: 1fr;
+    }
+
+    .food-details .main-info {
+        flex-direction: column;
+    }
+
+    .food-details .main-image {
+        max-width: 100%;
+        height: 200px;
+    }
+
+    .cart-table th, .cart-table td {
+        font-size: 0.9rem;
+        padding: 8px;
+    }
+
+    .total {
+        text-align: left;
+    }
+
+    .orders-table th, .orders-table td, .foods-table th, .foods-table td {
+        font-size: 0.9rem;
+        padding: 8px;
+    }
+}
