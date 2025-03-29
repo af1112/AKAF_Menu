@@ -31,12 +31,21 @@ if (isset($_GET['theme'])) {
 }
 $theme = $_SESSION['theme'];
 
-// Fetch all categories
-$categories = $conn->query("SELECT * FROM categories");
+// Fetch order details
+$order_id = $_GET['id'] ?? 0;
+$stmt = $conn->prepare("SELECT o.*, u.username FROM orders o JOIN users u ON o.user_id = u.id WHERE o.id = ?");
+$stmt->bind_param("i", $order_id);
+$stmt->execute();
+$order = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 
-// Check for success message
-$success_message = isset($_SESSION['success_message']) ? $_SESSION['success_message'] : null;
-unset($_SESSION['success_message']);
+if (!$order) {
+    header("Location: manage_orders.php");
+    exit();
+}
+
+// Fetch order items
+$items = $conn->query("SELECT oi.*, f.name_" . $_SESSION['lang'] . " AS food_name FROM order_items oi JOIN foods f ON oi.food_id = f.id WHERE oi.order_id = $order_id");
 ?>
 
 <!DOCTYPE html>
@@ -44,21 +53,21 @@ unset($_SESSION['success_message']);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $lang['manage_categories'] ?? 'Manage Categories'; ?></title>
+    <title><?php echo $lang['view_order'] ?? 'View Order'; ?> #<?php echo $order_id; ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="admin-body <?php echo $theme; ?>">
     <header class="admin-header">
-        <h1><?php echo $lang['manage_categories'] ?? 'Manage Categories'; ?></h1>
+        <h1><?php echo $lang['view_order'] ?? 'View Order'; ?> #<?php echo $order_id; ?></h1>
         <div class="controls">
-            <select onchange="window.location='manage_categories.php?lang=' + this.value">
+            <select onchange="window.location='view_order.php?id=<?php echo $order_id; ?>&lang=' + this.value">
                 <option value="en" <?php echo $_SESSION['lang'] == 'en' ? 'selected' : ''; ?>>English</option>
                 <option value="fa" <?php echo $_SESSION['lang'] == 'fa' ? 'selected' : ''; ?>>فارسی</option>
                 <option value="fr" <?php echo $_SESSION['lang'] == 'fr' ? 'selected' : ''; ?>>Français</option>
                 <option value="ar" <?php echo $_SESSION['lang'] == 'ar' ? 'selected' : ''; ?>>العربية</option>
             </select>
-            <a href="manage_categories.php?theme=<?php echo $theme === 'light' ? 'dark' : 'light'; ?>">
+            <a href="view_order.php?id=<?php echo $order_id; ?>&theme=<?php echo $theme === 'light' ? 'dark' : 'light'; ?>">
                 <i class="fas <?php echo $theme === 'light' ? 'fa-moon' : 'fa-sun'; ?>"></i>
                 <?php echo $theme === 'light' ? ($lang['dark_mode'] ?? 'Dark Mode') : ($lang['light_mode'] ?? 'Light Mode'); ?>
             </a>
@@ -76,12 +85,12 @@ unset($_SESSION['success_message']);
                 </a>
             </li>
             <li>
-                <a href="manage_categories.php" class="active">
+                <a href="manage_categories.php">
                     <i class="fas fa-list"></i> <?php echo $lang['manage_categories'] ?? 'Manage Categories'; ?>
                 </a>
             </li>
             <li>
-                <a href="manage_orders.php">
+                <a href="manage_orders.php" class="active">
                     <i class="fas fa-shopping-cart"></i> <?php echo $lang['manage_orders'] ?? 'Manage Orders'; ?>
                 </a>
             </li>
@@ -95,35 +104,31 @@ unset($_SESSION['success_message']);
 
     <main class="admin-content">
         <div class="admin-section">
-            <h3><?php echo $lang['manage_categories'] ?? 'Manage Categories'; ?></h3>
-            <?php if ($success_message): ?>
-                <div class="alert alert-success"><?php echo $success_message; ?></div>
-            <?php endif; ?>
-            <a href="add_category.php" class="button" style="margin-bottom: 20px;">
-                <i class="fas fa-plus"></i> <?php echo $lang['add_category'] ?? 'Add Category'; ?>
-            </a>
+            <h3><?php echo $lang['order_details'] ?? 'Order Details'; ?></h3>
+            <p><strong><?php echo $lang['order_id'] ?? 'Order ID'; ?>:</strong> #<?php echo $order['id']; ?></p>
+            <p><strong><?php echo $lang['user'] ?? 'User'; ?>:</strong> <?php echo htmlspecialchars($order['username']); ?></p>
+            <p><strong><?php echo $lang['total_price'] ?? 'Total Price'; ?>:</strong> <?php echo number_format($order['total_price'], 2); ?> <?php echo $lang['currency'] ?? '$'; ?></p>
+            <p><strong><?php echo $lang['status'] ?? 'Status'; ?>:</strong> <?php echo $lang['order_status_' . $order['status']] ?? ucfirst($order['status']); ?></p>
+            <p><strong><?php echo $lang['created_at'] ?? 'Created At'; ?>:</strong> <?php echo $order['created_at']; ?></p>
+            <p><strong><?php echo $lang['updated_at'] ?? 'Updated At'; ?>:</strong> <?php echo $order['updated_at']; ?></p>
+
+            <h4><?php echo $lang['order_items'] ?? 'Order Items'; ?></h4>
             <table class="foods-table">
                 <thead>
                     <tr>
-                        <th><?php echo $lang['name'] ?? 'Name'; ?></th>
-                        <th><?php echo $lang['actions'] ?? 'Actions'; ?></th>
+                        <th><?php echo $lang['food_name'] ?? 'Food Name'; ?></th>
+                        <th><?php echo $lang['quantity'] ?? 'Quantity'; ?></th>
+                        <th><?php echo $lang['price'] ?? 'Price'; ?></th>
+                        <th><?php echo $lang['total'] ?? 'Total'; ?></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php while ($category = $categories->fetch_assoc()): ?>
+                    <?php while ($item = $items->fetch_assoc()): ?>
                         <tr>
-                            <td><?php echo htmlspecialchars($category['name_' . $_SESSION['lang']]); ?></td>
-                            <td>
-                                <a href="edit_category.php?id=<?php echo $category['id']; ?>" class="button">
-                                    <i class="fas fa-edit"></i> <?php echo $lang['edit'] ?? 'Edit'; ?>
-                                </a>
-                                <form action="delete_category.php" method="POST" style="display:inline;">
-                                    <input type="hidden" name="id" value="<?php echo $category['id']; ?>">
-                                    <button type="submit" class="delete-btn" onclick="return confirm('<?php echo $lang['confirm_delete_category'] ?? 'Are you sure you want to delete this category?'; ?>')">
-                                        <i class="fas fa-trash"></i> <?php echo $lang['delete'] ?? 'Delete'; ?>
-                                    </button>
-                                </form>
-                            </td>
+                            <td><?php echo htmlspecialchars($item['food_name']); ?></td>
+                            <td><?php echo $item['quantity']; ?></td>
+                            <td><?php echo number_format($item['price'], 2); ?> <?php echo $lang['currency'] ?? '$'; ?></td>
+                            <td><?php echo number_format($item['quantity'] * $item['price'], 2); ?> <?php echo $lang['currency'] ?? '$'; ?></td>
                         </tr>
                     <?php endwhile; ?>
                 </tbody>

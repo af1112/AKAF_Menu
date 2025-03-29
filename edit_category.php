@@ -2,15 +2,6 @@
 session_start();
 include 'db.php';
 
-// Manage theme
-if (!isset($_SESSION['theme'])) {
-    $_SESSION['theme'] = 'light';
-}
-if (isset($_GET['theme'])) {
-    $_SESSION['theme'] = $_GET['theme'] === 'dark' ? 'dark' : 'light';
-}
-$theme = $_SESSION['theme'];
-
 // Check if admin is logged in
 if (!isset($_SESSION['admin'])) {
     header("Location: admin_login.php");
@@ -31,22 +22,25 @@ $rtl_languages = ['fa', 'ar'];
 $is_rtl = in_array($_SESSION['lang'], $rtl_languages);
 $direction = $is_rtl ? 'rtl' : 'ltr';
 
-// Get category ID
-$category_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+// Manage theme
+if (!isset($_SESSION['theme'])) {
+    $_SESSION['theme'] = 'light';
+}
+if (isset($_GET['theme'])) {
+    $_SESSION['theme'] = $_GET['theme'] === 'dark' ? 'dark' : 'light';
+}
+$theme = $_SESSION['theme'];
 
-// Fetch category details
-$stmt = $conn->prepare("SELECT * FROM categories WHERE id = ?");
-$stmt->bind_param("i", $category_id);
-$stmt->execute();
-$category = $stmt->get_result()->fetch_assoc();
-
+// Fetch category
+$category_id = $_GET['id'] ?? 0;
+$category = $conn->query("SELECT * FROM categories WHERE id = $category_id")->fetch_assoc();
 if (!$category) {
-    echo "Category not found.";
+    header("Location: manage_categories.php");
     exit();
 }
 
 // Handle form submission
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name_en = $_POST['name_en'] ?? '';
     $name_fa = $_POST['name_fa'] ?? '';
     $name_fr = $_POST['name_fr'] ?? '';
@@ -54,25 +48,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Handle image upload
     $image = $category['image'];
-    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-        // Delete old image if exists
-        if ($image && file_exists($image)) {
-            unlink($image);
-        }
-
-        $upload_dir = 'images/';
-        $image = $upload_dir . basename($_FILES['image']['name']);
+    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+        $image = 'images\Categories' . time() . '_' . basename($_FILES['image']['name']);
         move_uploaded_file($_FILES['image']['tmp_name'], $image);
     }
 
+    // Update category
     $stmt = $conn->prepare("UPDATE categories SET name_en = ?, name_fa = ?, name_fr = ?, name_ar = ?, image = ? WHERE id = ?");
     $stmt->bind_param("sssssi", $name_en, $name_fa, $name_fr, $name_ar, $image, $category_id);
-    if ($stmt->execute()) {
-        header("Location: manage_categories.php");
-        exit();
-    } else {
-        $error = $lang['update_failed'] ?? "Failed to update category.";
-    }
+    $stmt->execute();
+    $stmt->close();
+
+	// Set success message
+    $_SESSION['success_message'] = $lang['category_updated'] ?? 'Category updated successfully!';
+	
+    header("Location: manage_categories.php");
+    exit();
 }
 ?>
 
@@ -84,10 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title><?php echo $lang['edit_category'] ?? 'Edit Category'; ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
-<body class="<?php echo $theme; ?>">
-    <div class="header">
+<body class="admin-body <?php echo $theme; ?>">
+    <header class="admin-header">
         <h1><?php echo $lang['edit_category'] ?? 'Edit Category'; ?></h1>
         <div class="controls">
             <select onchange="window.location='edit_category.php?id=<?php echo $category_id; ?>&lang=' + this.value">
@@ -100,72 +90,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <i class="fas <?php echo $theme === 'light' ? 'fa-moon' : 'fa-sun'; ?>"></i>
                 <?php echo $theme === 'light' ? ($lang['dark_mode'] ?? 'Dark Mode') : ($lang['light_mode'] ?? 'Light Mode'); ?>
             </a>
-            <a href="manage_categories.php">
-                <i class="fas fa-arrow-left"></i> <?php echo $lang['back'] ?? 'Back'; ?>
+            <a href="logout.php">
+                <i class="fas fa-sign-out-alt"></i> <?php echo $lang['logout'] ?? 'Logout'; ?>
             </a>
         </div>
-    </div>
+    </header>
 
-    <div class="container">
-        <div class="edit-category">
+    <aside class="admin-sidebar">
+        <ul>
+            <li>
+                <a href="manage_foods.php">
+                    <i class="fas fa-utensils"></i> <?php echo $lang['manage_foods'] ?? 'Manage Foods'; ?>
+                </a>
+            </li>
+            <li>
+                <a href="manage_categories.php" class="active">
+                    <i class="fas fa-list"></i> <?php echo $lang['manage_categories'] ?? 'Manage Categories'; ?>
+                </a>
+            </li>
+            <li>
+                <a href="manage_orders.php">
+                    <i class="fas fa-shopping-cart"></i> <?php echo $lang['manage_orders'] ?? 'Manage Orders'; ?>
+                </a>
+            </li>
+            <li>
+                <a href="manage_hero_texts.php">
+                    <i class="fas fa-heading"></i> <?php echo $lang['manage_hero_texts'] ?? 'Manage Hero Texts'; ?>
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <main class="admin-content">
+        <div class="admin-section">
             <h3><?php echo $lang['edit_category'] ?? 'Edit Category'; ?></h3>
-            <?php if (isset($error)): ?>
-                <p class="error"><?php echo $error; ?></p>
-            <?php endif; ?>
             <form action="edit_category.php?id=<?php echo $category_id; ?>" method="POST" enctype="multipart/form-data">
                 <label for="name_en"><?php echo $lang['name_en'] ?? 'Name (English)'; ?>:</label>
-                <input type="text" name="name_en" id="name_en" value="<?php echo htmlspecialchars($category['name_en'] ?? ''); ?>" required onblur="translateFields('name_en', ['name_fa', 'name_fr', 'name_ar'])">
+                <input type="text" name="name_en" id="name_en" value="<?php echo htmlspecialchars($category['name_en']); ?>" required oninput="translateFields('name_en', 'name')">
 
                 <label for="name_fa"><?php echo $lang['name_fa'] ?? 'Name (Persian)'; ?>:</label>
-                <input type="text" name="name_fa" id="name_fa" value="<?php echo htmlspecialchars($category['name_fa'] ?? ''); ?>" required>
+                <input type="text" name="name_fa" id="name_fa" value="<?php echo htmlspecialchars($category['name_fa']); ?>" required oninput="translateFields('name_fa', 'name')">
 
                 <label for="name_fr"><?php echo $lang['name_fr'] ?? 'Name (French)'; ?>:</label>
-                <input type="text" name="name_fr" id="name_fr" value="<?php echo htmlspecialchars($category['name_fr'] ?? ''); ?>" required>
+                <input type="text" name="name_fr" id="name_fr" value="<?php echo htmlspecialchars($category['name_fr']); ?>" required oninput="translateFields('name_fr', 'name')">
 
                 <label for="name_ar"><?php echo $lang['name_ar'] ?? 'Name (Arabic)'; ?>:</label>
-                <input type="text" name="name_ar" id="name_ar" value="<?php echo htmlspecialchars($category['name_ar'] ?? ''); ?>" required>
+                <input type="text" name="name_ar" id="name_ar" value="<?php echo htmlspecialchars($category['name_ar']); ?>" required oninput="translateFields('name_ar', 'name')">
 
                 <label for="image"><?php echo $lang['image'] ?? 'Image'; ?>:</label>
-                <input type="file" name="image" id="image">
+                <input type="file" name="image">
                 <?php if ($category['image']): ?>
-                    <img src="<?php echo htmlspecialchars($category['image']); ?>" alt="<?php echo htmlspecialchars($category['name_' . $_SESSION['lang']]); ?>" style="max-width: 200px; margin-top: 10px;">
+                    <p><?php echo $lang['current_image'] ?? 'Current Image'; ?>: <img src="<?php echo htmlspecialchars($category['image']); ?>" alt="Category Image" style="max-width: 100px;"></p>
                 <?php endif; ?>
 
                 <button type="submit"><?php echo $lang['update'] ?? 'Update'; ?></button>
             </form>
         </div>
-    </div>
+    </main>
 
     <script>
-        async function translateFields(sourceFieldId, targetFieldIds) {
-            const sourceText = document.getElementById(sourceFieldId).value;
-            if (!sourceText) return;
+        async function translateFields(sourceId, fieldPrefix) {
+            const sourceText = document.getElementById(sourceId).value;
+            const sourceLang = sourceId.split('_')[1]; // e.g., 'en' from 'name_en'
 
-            const sourceLang = 'en'; // Assuming the source is always English
-            const targetLangs = {
-                'name_fa': 'fa',
-                'name_fr': 'fr',
-                'name_ar': 'ar'
+            const targetFields = {
+                'en': ['fa', 'fr', 'ar'],
+                'fa': ['en', 'fr', 'ar'],
+                'fr': ['en', 'fa', 'ar'],
+                'ar': ['en', 'fa', 'fr']
             };
 
-            for (const targetFieldId of targetFieldIds) {
-                const targetLang = targetLangs[targetFieldId];
-                if (!targetLang) continue;
+            for (let targetLang of targetFields[sourceLang]) {
+                const targetId = `${fieldPrefix}_${targetLang}`;
+                if (sourceText.trim() === '') {
+                    document.getElementById(targetId).value = '';
+                    continue;
+                }
 
                 try {
-                    const response = await axios.post('https://api.mymemory.translated.net/get', null, {
-                        params: {
-                            q: sourceText,
-                            langpair: `${sourceLang}|${targetLang}`
-                        }
+                    const response = await fetch('translate.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `text=${encodeURIComponent(sourceText)}&source=${sourceLang}&target=${targetLang}`
                     });
-                    const translatedText = response.data.responseData.translatedText;
-                    const targetField = document.getElementById(targetFieldId);
-                    if (targetField.value === '') {
-                        targetField.value = translatedText;
+                    const result = await response.json();
+                    if (result.translatedText) {
+                        document.getElementById(targetId).value = result.translatedText;
                     }
                 } catch (error) {
-                    console.error(`Translation failed for ${targetFieldId}:`, error);
+                    console.error('Translation error:', error);
                 }
             }
         }
