@@ -1,5 +1,5 @@
 <?php
-header("Cache-Control: no-cache, must-revalidate"); // غیرفعال کردن کش
+
 session_start();
 include 'db.php';
 
@@ -62,6 +62,7 @@ if ($hour >= 5 && $hour < 12) {
 $hero_texts = $conn->query("SELECT * FROM hero_texts LIMIT 1")->fetch_assoc();
 $hero_title = $hero_texts['title_' . $_SESSION['lang']] ?? ($lang['welcome_message'] ?? 'Welcome to Our Restaurant!');
 $hero_description = $hero_texts['description_' . $_SESSION['lang']] ?? ($lang['welcome_description'] ?? 'Discover our delicious menu and enjoy a great dining experience.');
+
 ?>
 
 <!DOCTYPE html>
@@ -124,7 +125,7 @@ $hero_description = $hero_texts['description_' . $_SESSION['lang']] ?? ($lang['w
                                     <i class="fas fa-sign-out-alt"></i> <?php echo $lang['logout'] ?? 'Logout'; ?>
                                 </a>
                             <?php else: ?>
-                                <a class="nav-link" href="login.php">
+                                <a class="nav-link" href="user_login.php">
                                     <i class="fas fa-sign-in-alt"></i> <?php echo $lang['login'] ?? 'Login'; ?>
                                 </a>
                             <?php endif; ?>
@@ -169,7 +170,7 @@ $hero_description = $hero_texts['description_' . $_SESSION['lang']] ?? ($lang['w
                                     <i class="fas fa-sign-out-alt"></i> <?php echo $lang['logout'] ?? 'Logout'; ?>
                                 </a>
                             <?php else: ?>
-                                <a class="nav-link" href="login.php">
+                                <a class="nav-link" href="user_login.php">
                                     <i class="fas fa-sign-in-alt"></i> <?php echo $lang['login'] ?? 'Login'; ?>
                                 </a>
                             <?php endif; ?>

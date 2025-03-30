@@ -35,8 +35,8 @@ $theme = $_SESSION['theme'];
 $sort_column = $_GET['sort_column'] ?? 'created_at';
 $sort_order = $_GET['sort_order'] ?? 'DESC';
 $search = $_GET['search'] ?? '';
-$search_column = $_GET['search_column'] ?? 'id';
-$filter_by = $_GET['filter_by'] ?? '';
+$search_column = $_GET['search_column'] ?? 'id'; // New: Column to search in
+$filter_by = $_GET['filter_by'] ?? ''; // New: Filter by status or payment
 $show_all = isset($_GET['show_all']) ? true : false;
 
 // Validate sort column
@@ -156,8 +156,9 @@ foreach ($statuses as $status) {
 }
 
 // Function to get sort link
-function getSortLink($column, $direction, $current_sort_column, $current_sort_order) {
-    return "?sort_column=$column&sort_order=$direction" . (isset($_GET['search']) ? "&search=" . $_GET['search'] : "") . (isset($_GET['search_column']) ? "&search_column=" . $_GET['search_column'] : "") . (isset($_GET['filter_by']) ? "&filter_by=" . $_GET['filter_by'] : "") . (isset($_GET['show_all']) ? "&show_all=1" : "");
+function getSortLink($column, $current_sort_column, $current_sort_order) {
+    $new_sort_order = ($current_sort_column == $column && $current_sort_order == 'ASC') ? 'DESC' : 'ASC';
+    return "?sort_column=$column&sort_order=$new_sort_order" . (isset($_GET['search']) ? "&search=" . $_GET['search'] : "") . (isset($_GET['search_column']) ? "&search_column=" . $_GET['search_column'] : "") . (isset($_GET['filter_by']) ? "&filter_by=" . $_GET['filter_by'] : "") . (isset($_GET['show_all']) ? "&show_all=1" : "");
 }
 ?>
 
@@ -166,14 +167,12 @@ function getSortLink($column, $direction, $current_sort_column, $current_sort_or
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="refresh" content="10">
+    <meta http-equiv="refresh" content="10"> <!-- Refresh every 10 seconds -->
     <title><?php echo $lang['manage_orders'] ?? 'Manage Orders'; ?></title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <style>
-        .foods-table thead th { color: #fff; background-color: #333; }
-        .sort-icon { margin-left: 5px; color: #fff; text-decoration: none; font-size: 12px; }
-        .sort-icon:hover { color: #ddd; }
+        .foods-table thead th { color: #fff; background-color: #333; } /* Fix header readability */
     </style>
 </head>
 <body class="admin-body <?php echo $theme; ?>">
@@ -242,42 +241,12 @@ function getSortLink($column, $direction, $current_sort_column, $current_sort_or
                 <table class="foods-table">
                     <thead>
                         <tr>
-                            <th>
-                                <?php echo $lang['order_id'] ?? 'Order ID'; ?>
-                                <a href="<?php echo getSortLink('id', 'ASC', $sort_column, $sort_order); ?>" class="sort-icon"><i class="fas fa-arrow-up"></i></a>
-                                <a href="<?php echo getSortLink('id', 'DESC', $sort_column, $sort_order); ?>" class="sort-icon"><i class="fas fa-arrow-down"></i></a>
-                                <?php if ($sort_column == 'id') echo $sort_order == 'ASC' ? '↑' : '↓'; ?>
-                            </th>
-                            <th>
-                                <?php echo $lang['user'] ?? 'User'; ?>
-                                <a href="<?php echo getSortLink('user_id', 'ASC', $sort_column, $sort_order); ?>" class="sort-icon"><i class="fas fa-arrow-up"></i></a>
-                                <a href="<?php echo getSortLink('user_id', 'DESC', $sort_column, $sort_order); ?>" class="sort-icon"><i class="fas fa-arrow-down"></i></a>
-                                <?php if ($sort_column == 'user_id') echo $sort_order == 'ASC' ? '↑' : '↓'; ?>
-                            </th>
-                            <th>
-                                <?php echo $lang['table_address'] ?? 'Table/Address'; ?>
-                                <a href="<?php echo getSortLink('table_number', 'ASC', $sort_column, $sort_order); ?>" class="sort-icon"><i class="fas fa-arrow-up"></i></a>
-                                <a href="<?php echo getSortLink('table_number', 'DESC', $sort_column, $sort_order); ?>" class="sort-icon"><i class="fas fa-arrow-down"></i></a>
-                                <?php if ($sort_column == 'table_number') echo $sort_order == 'ASC' ? '↑' : '↓'; ?>
-                            </th>
-                            <th>
-                                <?php echo $lang['total_price'] ?? 'Total Price'; ?>
-                                <a href="<?php echo getSortLink('total_price', 'ASC', $sort_column, $sort_order); ?>" class="sort-icon"><i class="fas fa-arrow-up"></i></a>
-                                <a href="<?php echo getSortLink('total_price', 'DESC', $sort_column, $sort_order); ?>" class="sort-icon"><i class="fas fa-arrow-down"></i></a>
-                                <?php if ($sort_column == 'total_price') echo $sort_order == 'ASC' ? '↑' : '↓'; ?>
-                            </th>
-                            <th>
-                                <?php echo $lang['created_at'] ?? 'Created At'; ?>
-                                <a href="<?php echo getSortLink('created_at', 'ASC', $sort_column, $sort_order); ?>" class="sort-icon"><i class="fas fa-arrow-up"></i></a>
-                                <a href="<?php echo getSortLink('created_at', 'DESC', $sort_column, $sort_order); ?>" class="sort-icon"><i class="fas fa-arrow-down"></i></a>
-                                <?php if ($sort_column == 'created_at') echo $sort_order == 'ASC' ? '↑' : '↓'; ?>
-                            </th>
-                            <th>
-                                <?php echo $lang['updated_at'] ?? 'Updated At'; ?>
-                                <a href="<?php echo getSortLink('updated_at', 'ASC', $sort_column, $sort_order); ?>" class="sort-icon"><i class="fas fa-arrow-up"></i></a>
-                                <a href="<?php echo getSortLink('updated_at', 'DESC', $sort_column, $sort_order); ?>" class="sort-icon"><i class="fas fa-arrow-down"></i></a>
-                                <?php if ($sort_column == 'updated_at') echo $sort_order == 'ASC' ? '↑' : '↓'; ?>
-                            </th>
+                            <th><a href="<?php echo getSortLink('id', $sort_column, $sort_order); ?>"><?php echo $lang['order_id'] ?? 'Order ID'; ?><?php if ($sort_column == 'id') echo $sort_order == 'ASC' ? '↑' : '↓'; ?></a></th>
+                            <th><a href="<?php echo getSortLink('user_id', $sort_column, $sort_order); ?>"><?php echo $lang['user'] ?? 'User'; ?><?php if ($sort_column == 'user_id') echo $sort_order == 'ASC' ? '↑' : '↓'; ?></a></th>
+                            <th><a href="<?php echo getSortLink('table_number', $sort_column, $sort_order); ?>"><?php echo $lang['table_address'] ?? 'Table/Address'; ?><?php if ($sort_column == 'table_number') echo $sort_order == 'ASC' ? '↑' : '↓'; ?></a></th>
+                            <th><a href="<?php echo getSortLink('total_price', $sort_column, $sort_order); ?>"><?php echo $lang['total_price'] ?? 'Total Price'; ?><?php if ($sort_column == 'total_price') echo $sort_order == 'ASC' ? '↑' : '↓'; ?></a></th>
+                            <th><a href="<?php echo getSortLink('created_at', $sort_column, $sort_order); ?>"><?php echo $lang['created_at'] ?? 'Created At'; ?><?php if ($sort_column == 'created_at') echo $sort_order == 'ASC' ? '↑' : '↓'; ?></a></th>
+                            <th><a href="<?php echo getSortLink('updated_at', $sort_column, $sort_order); ?>"><?php echo $lang['updated_at'] ?? 'Updated At'; ?><?php if ($sort_column == 'updated_at') echo $sort_order == 'ASC' ? '↑' : '↓'; ?></a></th>
                             <th><?php echo $lang['items'] ?? 'Items'; ?></th>
                             <th><?php echo $lang['comment'] ?? 'Comment'; ?></th>
                             <th><?php echo $lang['actions'] ?? 'Actions'; ?></th>
