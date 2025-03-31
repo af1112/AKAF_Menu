@@ -2,6 +2,14 @@
 session_start();
 include 'db.php';
 
+// Load currency from settings
+$stmt = $conn->prepare("SELECT value FROM settings WHERE `key` = 'currency'");
+$stmt->execute();
+$currency = $stmt->get_result()->fetch_assoc()['value'] ?? 'OMR'; // پیش‌فرض OMR اگه چیزی پیدا نشد
+$stmt = $conn->prepare("SELECT value FROM settings WHERE `key` = 'currency_Decimal'");
+$stmt->execute();
+$currency_Decimal = $stmt->get_result()->fetch_assoc()['value'] ?? '3'; // پیش‌فرض 3 اگه چیزی پیدا نشد
+
 // Load language
 if (!isset($_SESSION['lang'])) {
     $_SESSION['lang'] = 'en';
@@ -278,9 +286,9 @@ if (isset($_GET['remove'])) {
                         <?php foreach ($cart_details as $item): ?>
                             <tr>
                                 <td class="item-name"><?php echo htmlspecialchars($item['name']); ?></td>
-                                <td>$<?php echo number_format($item['price'], 2); ?></td>
+                                <td><?php echo number_format($item['price'], $currency_Decimal); ?> <?php echo $currency; ?></td>
                                 <td><?php echo $item['quantity']; ?></td>
-                                <td>$<?php echo number_format($item['subtotal'], 2); ?></td>
+                                <td><?php echo number_format($item['subtotal'], $currency_Decimal); ?> <?php echo $currency; ?></td>
                                 <td>
                                     <a href="cart.php?remove=<?php echo $item['id']; ?>" class="remove-btn">
                                         <i class="fas fa-trash-alt"></i>
@@ -292,7 +300,7 @@ if (isset($_GET['remove'])) {
                 </table>
                 <div class="cart-summary">
                     <div class="total">
-                        <?php echo $lang['total'] ?? 'Total'; ?>: $<?php echo number_format($total_price, 2); ?>
+                        <?php echo $lang['total'] ?? 'Total'; ?>: <?php echo number_format($total_price, $currency_Decimal); ?> <?php echo $currency; ?>
                     </div>
                     <div>
                         <a href="menu.php" class="continue-shopping">

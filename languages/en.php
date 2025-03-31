@@ -2,6 +2,8 @@
 $lang = [
     'menu' => 'Menu',
     'cart' => 'Cart',
+	'chekout' => 'Checkout',
+	'shipping_info' => 'Shipping Information',
     'profile' => 'Profile',
     'logout' => 'Logout',
     'login' => 'Login',

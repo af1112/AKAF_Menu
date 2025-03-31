@@ -2,6 +2,14 @@
 session_start();
 include 'db.php';
 
+// Load currency from settings
+$stmt = $conn->prepare("SELECT value FROM settings WHERE `key` = 'currency'");
+$stmt->execute();
+$currency = $stmt->get_result()->fetch_assoc()['value'] ?? 'OMR'; // پیش‌فرض OMR اگه چیزی پیدا نشد
+$stmt = $conn->prepare("SELECT value FROM settings WHERE `key` = 'currency_Decimal'");
+$stmt->execute();
+$currency_Decimal = $stmt->get_result()->fetch_assoc()['value'] ?? '3'; // پیش‌فرض 3 اگه چیزی پیدا نشد
+
 // Manage theme
 if (!isset($_SESSION['theme'])) {
     $_SESSION['theme'] = 'light'; // Default theme
@@ -195,7 +203,7 @@ foreach ($cart_items as $quantity) {
                 <img src="<?php echo htmlspecialchars($food['main_image'] ?? 'images/default.jpg'); ?>" alt="<?php echo htmlspecialchars($food[$lang_name_col]); ?>" class="main-image">
                 <div class="info-text">
                     <h2><?php echo htmlspecialchars($food[$lang_name_col]); ?></h2>
-                    <p class="price">$<?php echo number_format($food['price'], 2); ?></p>
+                    <p class="price"><?php echo number_format($food['price'], $currency_Decimal); ?> <?php echo $currency; ?></p>
                     <p class="availability <?php echo $food['is_available'] ? 'available' : 'unavailable'; ?>">
                         <?php echo $food['is_available'] ? ($lang['available'] ?? 'Available') : ($lang['unavailable'] ?? 'Unavailable'); ?>
                     </p>

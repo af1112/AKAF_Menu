@@ -2,6 +2,13 @@
 session_start();
 include 'db.php';
 
+// Load currency from settings
+$stmt = $conn->prepare("SELECT value FROM settings WHERE `key` = 'currency'");
+$stmt->execute();
+$currency = $stmt->get_result()->fetch_assoc()['value'] ?? 'OMR'; // پیش‌فرض OMR اگه چیزی پیدا نشد
+$stmt = $conn->prepare("SELECT value FROM settings WHERE `key` = 'currency_Decimal'");
+$stmt->execute();
+$currency_Decimal = $stmt->get_result()->fetch_assoc()['value'] ?? '3'; // پیش‌فرض 3 اگه چیزی پیدا نشد
 // Manage theme
 if (!isset($_SESSION['theme'])) {
     $_SESSION['theme'] = 'light';
@@ -193,7 +200,7 @@ $footer_info = $conn->query("SELECT * FROM footer_info LIMIT 1")->fetch_assoc();
                             <img src="<?php echo htmlspecialchars($food['main_image'] ?? 'images/default.jpg'); ?>" class="card-img-top zoomable-image" alt="<?php echo htmlspecialchars($food['name_' . $_SESSION['lang']]); ?>" data-full-image="<?php echo htmlspecialchars($food['main_image'] ?? 'images/default.jpg'); ?>">
                             <div class="card-body">
                                 <h5 class="card-title"><?php echo htmlspecialchars($food['name_' . $_SESSION['lang']]); ?></h5>
-                                <p class="card-text text-muted">$<?php echo number_format($food['price'], 2); ?></p>
+                                <p class="card-text text-muted"><?php echo number_format($food['price'], $currency_Decimal); ?> <?php echo $currency; ?></p>
                                 <p>
                                     <span class="badge <?php echo $food['is_available'] ? 'bg-success' : 'bg-danger'; ?>">
                                         <?php echo $food['is_available'] ? ($lang['available'] ?? 'Available') : ($lang['unavailable'] ?? 'Unavailable'); ?>

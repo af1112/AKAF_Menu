@@ -2,11 +2,27 @@
 session_start();
 include 'db.php';
 
-// Check if user is logged in
-if (!isset($_SESSION['user']) || !is_array($_SESSION['user']) || !isset($_SESSION['user']['id'])) {
-    header("Location: user_login.php");
-    exit();
+// Load currency from settings
+$stmt = $conn->prepare("SELECT value FROM settings WHERE `key` = 'currency'");
+$stmt->execute();
+$currency = $stmt->get_result()->fetch_assoc()['value'] ?? 'OMR'; // پیش‌فرض OMR اگه چیزی پیدا نشد
+$stmt = $conn->prepare("SELECT value FROM settings WHERE `key` = 'currency_Decimal'");
+$stmt->execute();
+$currency_Decimal = $stmt->get_result()->fetch_assoc()['value'] ?? '3'; // پیش‌فرض 3 اگه چیزی پیدا نشد
+
+// Manage theme
+if (!isset($_SESSION['theme'])) {
+    $_SESSION['theme'] = 'light';
 }
+if (isset($_GET['theme'])) {
+    $_SESSION['theme'] = $_GET['theme'] === 'dark' ? 'dark' : 'light';
+}
+$theme = $_SESSION['theme'];
+
+// Check if user is logged in
+$is_logged_in = isset($_SESSION['user']) && is_array($_SESSION['user']) && isset($_SESSION['user']['id']);
+$user_id = $is_logged_in ? $_SESSION['user']['id'] : null;
+
 
 $user_id = $_SESSION['user']['id'];
 
@@ -51,7 +67,12 @@ if (!empty($cart_items)) {
         ];
     }
 }
-
+// Calculate cart item count
+$cart_items = $_SESSION['cart'] ?? [];
+$cart_count = 0;
+foreach ($cart_items as $quantity) {
+    $cart_count += $quantity;
+}
 // Process checkout
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['name'] ?? '';
@@ -99,253 +120,111 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $lang['checkout'] ?? 'Checkout'; ?></title>
+    <title><?php echo $lang['menu'] ?? 'Menu'; ?></title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- AOS for animations -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        /* هدر */
-        .header {
-            background: linear-gradient(to right, #ff6f61, #ff9f43);
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 1.8rem;
-        }
-
-        .header .controls {
-            display: flex;
-            gap: 15px;
-        }
-
-        .header select, .header a {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .header select {
-            background-color: #fff;
-            color: #333;
-        }
-
-        .header a {
-            background-color: #fff;
-            color: #ff6f61;
-            text-decoration: none;
-            position: relative;
-        }
-
-        .header a:hover, .header select:hover {
-            background-color: #f0f0f0;
-        }
-
-        .header .cart-count {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background-color: #dc3545;
-            color: white;
-            border-radius: 50%;
-            padding: 2px 6px;
-            font-size: 0.8rem;
-        }
-
-        /* بخش پرداخت */
-        .checkout {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .checkout h2 {
-            color: #ff6f61;
-            margin: 0 0 20px;
-        }
-
-        .order-summary {
-            margin-bottom: 30px;
-        }
-
-        .order-summary h3 {
-            color: #333;
-            margin: 0 0 15px;
-        }
-
-        .cart-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        .cart-table th, .cart-table td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        .cart-table th {
-            background-color: #f9f9f9;
-            color: #ff6f61;
-        }
-
-        .cart-table td {
-            color: #666;
-        }
-
-        .cart-table .item-name {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .total {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #333;
-            text-align: right;
-        }
-
-        .checkout-form {
-            margin-top: 30px;
-        }
-
-        .checkout-form h3 {
-            color: #333;
-            margin: 0 0 15px;
-        }
-
-        .checkout-form form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .checkout-form label {
-            font-weight: bold;
-        }
-
-        .checkout-form input, .checkout-form textarea {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 1rem;
-        }
-
-        .checkout-form textarea {
-            height: 100px;
-            resize: vertical;
-        }
-
-        .checkout-form .error, .checkout-form .success {
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-
-        .checkout-form .error {
-            background-color: #f8d7da;
-            color: #dc3545;
-        }
-
-        .checkout-form .success {
-            background-color: #d4edda;
-            color: #28a745;
-        }
-
-        .checkout-form button {
-            padding: 10px 20px;
-            background-color: #ff6f61;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .checkout-form button:hover {
-            background-color: #e65b50;
-        }
-
-        /* ریسپانسیو */
-        @media (max-width: 768px) {
-            .cart-table th, .cart-table td {
-                font-size: 0.9rem;
-                padding: 8px;
-            }
-
-            .total {
-                text-align: left;
-            }
-
-            .header h1 {
-                font-size: 1.5rem;
-            }
-
-            .header .controls {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-    </style>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="<?php echo $theme; ?>">
     <!-- هدر -->
-    <div class="header">
-        <h1><?php echo $lang['checkout'] ?? 'Checkout'; ?></h1>
-        <div class="controls">
-            <select onchange="window.location='checkout.php?lang=' + this.value">
-                <option value="en" <?php echo $_SESSION['lang'] == 'en' ? 'selected' : ''; ?>>English</option>
-                <option value="fa" <?php echo $_SESSION['lang'] == 'fa' ? 'selected' : ''; ?>>فارسی</option>
-                <option value="ar" <?php echo $_SESSION['lang'] == 'ar' ? 'selected' : ''; ?>>العربية</option>
-            </select>
-            <a href="cart.php">
-                <i class="fas fa-shopping-cart"></i> <?php echo $lang['cart'] ?? 'Cart'; ?>
-                <?php if ($cart_count > 0): ?>
-                    <span class="cart-count"><?php echo $cart_count; ?></span>
-                <?php endif; ?>
-            </a>
-            <?php if (isset($_SESSION['user']) && is_array($_SESSION['user']) && isset($_SESSION['user']['id'])): ?>
-                <a href="user_dashboard.php">
-                    <i class="fas fa-user"></i> <?php echo $lang['profile'] ?? 'Profile'; ?>
-                </a>
-                <a href="logout.php">
-                    <i class="fas fa-sign-out-alt"></i> <?php echo $lang['logout'] ?? 'Logout'; ?>
-                </a>
-            <?php else: ?>
-                <a href="user_login.php">
-                    <i class="fas fa-sign-in-alt"></i> <?php echo $lang['login'] ?? 'Login'; ?>
-                </a>
-            <?php endif; ?>
+		<!-- Language Bar -->
+	<div class="language-bar">
+		<div class="container-fluid">
+			<div class="language-switcher <?php echo $is_rtl ? 'text-start' : 'text-end'; ?>">
+				<a class="lang-link <?php echo $_SESSION['lang'] == 'en' ? 'active' : ''; ?>" href="checkout.php?lang=en">
+					<img src="https://flagcdn.com/20x15/gb.png" alt="English" class="flag-icon"> EN
+				</a>
+				<a class="lang-link <?php echo $_SESSION['lang'] == 'fa' ? 'active' : ''; ?>" href="checkout.php?lang=fa">
+					<img src="https://flagcdn.com/20x15/ir.png" alt="Persian" class="flag-icon"> FA
+				</a>
+				<a class="lang-link <?php echo $_SESSION['lang'] == 'ar' ? 'active' : ''; ?>" href="checkout.php?lang=ar">
+					<img src="https://flagcdn.com/20x15/sa.png" alt="Arabic" class="flag-icon"> AR
+				</a>
+				<a class="lang-link <?php echo $_SESSION['lang'] == 'fr' ? 'active' : ''; ?>" href="checkout.php?lang=fr">
+					<img src="https://flagcdn.com/20x15/fr.png" alt="French" class="flag-icon"> FR
+				</a>
+			</div>
+		</div>
+	</div>			
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg custom-navbar">
+        <div class="container-fluid">
+            <span class="navbar-brand"><?php echo $lang['chekout'] ?? 'Chekout'; ?></span>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse <?php echo $is_rtl ? '' : 'justify-content-end'; ?>" id="navbarNav">
+                <ul class="navbar-nav <?php echo $is_rtl ? 'nav-rtl' : ''; ?>">
+                    <?php if ($is_rtl): ?>
+                        <!-- RTL: Login/Logout on the far left -->
+                        <li class="nav-item login-item">
+                            <?php if ($is_logged_in): ?>
+                                <a class="nav-link" href="logout.php">
+                                    <i class="fas fa-sign-out-alt"></i> <?php echo $lang['logout'] ?? 'Logout'; ?>
+                                </a>
+                            <?php else: ?>
+                                <a class="nav-link" href="user_login.php">
+                                    <i class="fas fa-sign-in-alt"></i> <?php echo $lang['login'] ?? 'Login'; ?>
+                                </a>
+                            <?php endif; ?>
+                        </li>
+                    <?php endif; ?>
+                    <!-- Middle items -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="checkout.php?theme=<?php echo $theme === 'light' ? 'dark' : 'light'; ?>">
+                            <i class="fas <?php echo $theme === 'light' ? 'fa-moon' : 'fa-sun'; ?>"></i>
+                            <?php echo $theme === 'light' ? ($lang['dark_mode'] ?? 'Dark Mode') : ($lang['light_mode'] ?? 'Light Mode'); ?>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="cart.php">
+                            <i class="fas fa-shopping-cart"></i> <?php echo $lang['cart'] ?? 'Cart'; ?>
+                            <?php if ($cart_count > 0): ?>
+                                <span class="cart-count"><?php echo $cart_count; ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                    <?php if ($is_logged_in && !$is_rtl): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="user_dashboard.php">
+                                <i class="fas fa-user"></i> <?php echo $lang['profile'] ?? 'Profile'; ?>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+                    <?php if ($is_rtl): ?>
+                        <!-- RTL: Profile in the middle -->
+                        <?php if ($is_logged_in): ?>
+                            <li class="nav-item">
+                                <a class="nav-link" href="user_dashboard.php">
+                                    <i class="fas fa-user"></i> <?php echo $lang['profile'] ?? 'Profile'; ?>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <!-- LTR: Login/Logout on the far right -->
+                        <li class="nav-item">
+                            <?php if ($is_logged_in): ?>
+                                <a class="nav-link" href="logout.php">
+                                    <i class="fas fa-sign-out-alt"></i> <?php echo $lang['logout'] ?? 'Logout'; ?>
+                                </a>
+                            <?php else: ?>
+                                <a class="nav-link" href="user_login.php">
+                                    <i class="fas fa-sign-in-alt"></i> <?php echo $lang['login'] ?? 'Login'; ?>
+                                </a>
+                            <?php endif; ?>
+                        </li>
+                    <?php endif; ?>
+                </ul>
+            </div>
         </div>
-    </div>
+    </nav>
+
 
     <div class="container">
         <!-- پرداخت -->
@@ -373,15 +252,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <?php foreach ($cart_details as $item): ?>
                                 <tr>
                                     <td class="item-name"><?php echo htmlspecialchars($item['name']); ?></td>
-                                    <td>$<?php echo number_format($item['price'], 2); ?></td>
+                                    <td><?php echo number_format($item['price'], $currency_Decimal); ?> <?php echo $currency; ?></td>
                                     <td><?php echo $item['quantity']; ?></td>
-                                    <td>$<?php echo number_format($item['subtotal'], 2); ?></td>
+                                    <td><?php echo number_format($item['subtotal'], $currency_Decimal); ?> <?php echo $currency; ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
                     <div class="total">
-                        <?php echo $lang['total'] ?? 'Total'; ?>: $<?php echo number_format($total_price, 2); ?>
+                        <?php echo $lang['total'] ?? 'Total'; ?>: <?php echo number_format($total_price, $currency_Decimal); ?> <?php echo $currency; ?>
                     </div>
                 </div>
 
