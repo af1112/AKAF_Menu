@@ -2,7 +2,7 @@
 $lang = [
     'menu' => 'Menu',
     'cart' => 'Cart',
-	'chekout' => 'Checkout',
+	'checkout' => 'Checkout',
 	'shipping_info' => 'Shipping Information',
     'profile' => 'Profile',
     'logout' => 'Logout',
@@ -153,6 +153,27 @@ $lang = [
 	'order_status_on_the_way' => "On the Way",
 	'order_status_delivered' => "Delivered",
 	'order_status_served' => "Served",
-	'payment_status_paid' => "Paid"
+	'payment_status_paid' => "Paid",
+	'delivery_options' => "Delivery Options",
+	'dine_in' => "Dine-In",
+	'takeaway' => "Takeaway / Pick-up",
+	'delivery' => "Delivery",
+	'drive_thru' => "Drive-Thru",
+	'contactless_delivery' => "Contactless Delivery",
+	'self_service' => "Self Service",
+	'curbside_pickup' => "Curbside Pickup",
+	'Required_information_for_food_Delivery' => 'Required information for food Delivery',
+	'added_to_cart' => 'Added to cart',
+	'failed_to_add_to_cart' => 'Failed to add to cart',
+	'all_categories' => 'All Categories',
+	'view_details' => 'View Details',
+	'continue_shopping' => 'Continue Shopping',
+	'shopping_cart' => 'Shopping Cart',
+	'food' => 'Item Name',
+	'subtotal' => 'SubTotal',
+	'Special_Request' => 'Special Request',
+	'total' => 'Total',
+	'VAT' => 'VAT',
+	'grand_total' => 'Grand Total'
 ];
 ?>

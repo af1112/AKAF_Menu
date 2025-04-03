@@ -1,7 +1,4 @@
 ﻿<?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 session_start();
 include 'db.php';
 
@@ -56,8 +53,8 @@ if ($category_id > 0) {
 // Calculate cart item count
 $cart_items = $_SESSION['cart'] ?? [];
 $cart_count = 0;
-foreach ($cart_items as $item) {
-    $cart_count += $item['quantity'];
+foreach ($cart_items as $quantity) {
+    $cart_count += $quantity;
 }
 
 // Fetch footer info
@@ -69,6 +66,7 @@ $footer_info = $conn->query("SELECT * FROM footer_info LIMIT 1")->fetch_assoc();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo $lang['menu'] ?? 'Menu'; ?></title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <!-- Font Awesome for icons -->
@@ -84,16 +82,16 @@ $footer_info = $conn->query("SELECT * FROM footer_info LIMIT 1")->fetch_assoc();
         <div class="container-fluid">
             <div class="language-switcher <?php echo $is_rtl ? 'text-start' : 'text-end'; ?>">
                 <a class="lang-link <?php echo $_SESSION['lang'] == 'en' ? 'active' : ''; ?>" href="menu.php?lang=en<?php echo $category_id ? '&category_id=' . $category_id : ''; ?>">
-                    <img src="images/flags/en.png" alt="English" class="flag-icon"> EN
+                    <img src="https://flagcdn.com/20x15/gb.png" alt="English" class="flag-icon"> EN
                 </a>
                 <a class="lang-link <?php echo $_SESSION['lang'] == 'fa' ? 'active' : ''; ?>" href="menu.php?lang=fa<?php echo $category_id ? '&category_id=' . $category_id : ''; ?>">
-                    <img src="images/flags/fa.png" alt="Persian" class="flag-icon"> FA
+                    <img src="https://flagcdn.com/20x15/ir.png" alt="Persian" class="flag-icon"> FA
                 </a>
                 <a class="lang-link <?php echo $_SESSION['lang'] == 'ar' ? 'active' : ''; ?>" href="menu.php?lang=ar<?php echo $category_id ? '&category_id=' . $category_id : ''; ?>">
-                    <img src="images/flags/ar.png" alt="Arabic" class="flag-icon"> AR
+                    <img src="https://flagcdn.com/20x15/sa.png" alt="Arabic" class="flag-icon"> AR
                 </a>
                 <a class="lang-link <?php echo $_SESSION['lang'] == 'fr' ? 'active' : ''; ?>" href="menu.php?lang=fr<?php echo $category_id ? '&category_id=' . $category_id : ''; ?>">
-                    <img src="images/flags/fr.png" alt="French" class="flag-icon"> FR
+                    <img src="https://flagcdn.com/20x15/fr.png" alt="French" class="flag-icon"> FR
                 </a>
             </div>
         </div>
@@ -102,6 +100,7 @@ $footer_info = $conn->query("SELECT * FROM footer_info LIMIT 1")->fetch_assoc();
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg custom-navbar">
         <div class="container-fluid">
+            <span class="navbar-brand"><?php echo $lang['menu'] ?? 'Menu'; ?></span>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -123,11 +122,6 @@ $footer_info = $conn->query("SELECT * FROM footer_info LIMIT 1")->fetch_assoc();
                     <?php endif; ?>
                     <!-- Middle items -->
                     <li class="nav-item">
-						<li class="nav-item">
-							<a class="nav-link" href="index.php">
-								<i class="fas fa-user"></i> <?php echo $lang['home'] ?? 'Home'; ?>
-							</a>
-						</li>
                         <a class="nav-link" href="menu.php?theme=<?php echo $theme === 'light' ? 'dark' : 'light'; ?><?php echo $category_id ? '&category_id=' . $category_id : ''; ?>">
                             <i class="fas <?php echo $theme === 'light' ? 'fa-moon' : 'fa-sun'; ?>"></i>
                             <?php echo $theme === 'light' ? ($lang['dark_mode'] ?? 'Dark Mode') : ($lang['light_mode'] ?? 'Light Mode'); ?>
@@ -203,9 +197,7 @@ $footer_info = $conn->query("SELECT * FROM footer_info LIMIT 1")->fetch_assoc();
                 <?php while ($food = $foods->fetch_assoc()): ?>
                     <div class="col" data-aos="fade-up">
                         <div class="card h-100">
-							<a href="food_details.php?id=<?php echo htmlspecialchars($food['id'], ENT_QUOTES, 'UTF-8'); ?>">
-								<img src="<?php echo htmlspecialchars($food['main_image'] ?? 'images/default.jpg'); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($food['name_' . $_SESSION['lang']]); ?>">
-							</a>						
+                            <img src="<?php echo htmlspecialchars($food['main_image'] ?? 'images/default.jpg'); ?>" class="card-img-top zoomable-image" alt="<?php echo htmlspecialchars($food['name_' . $_SESSION['lang']]); ?>" data-full-image="<?php echo htmlspecialchars($food['main_image'] ?? 'images/default.jpg'); ?>">
                             <div class="card-body">
                                 <h5 class="card-title"><?php echo htmlspecialchars($food['name_' . $_SESSION['lang']]); ?></h5>
                                 <p class="card-text text-muted"><?php echo number_format($food['price'], $currency_Decimal); ?> <?php echo $currency; ?></p>
@@ -218,7 +210,9 @@ $footer_info = $conn->query("SELECT * FROM footer_info LIMIT 1")->fetch_assoc();
                                     <a href="food_details.php?id=<?php echo $food['id']; ?>" class="btn btn-primary btn-sm"><?php echo $lang['view_details'] ?? 'View Details'; ?></a>
                                     <?php if ($food['is_available']): ?>
                                         <?php if ($is_logged_in): ?>
-											<button onclick="addToCart(<?php echo isset($food['id']) ? htmlspecialchars($food['id'], ENT_QUOTES, 'UTF-8') : '0'; ?>)"><?php echo $lang['add_to_cart'] ?? 'Add to Cart'; ?></button>
+                                            <button class="btn btn-success btn-sm" onclick="addToCart(<?php echo $food['id']; ?>)">
+                                                <i class="fas fa-cart-plus"></i> <?php echo $lang['add_to_cart'] ?? 'Add to Cart'; ?>
+                                            </button>
                                         <?php else: ?>
                                             <button class="btn btn-success btn-sm disabled" title="<?php echo $lang['login_to_add_to_cart'] ?? 'Please log in to add to cart'; ?>">
                                                 <i class="fas fa-cart-plus"></i> <?php echo $lang['add_to_cart'] ?? 'Add to Cart'; ?>
@@ -279,17 +273,100 @@ $footer_info = $conn->query("SELECT * FROM footer_info LIMIT 1")->fetch_assoc();
             </div>
         </div>
     </footer>
+
     <!-- Bootstrap JS and Popper.js -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
     <!-- AOS for animations -->
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-	<script>
-		const langMessages = {
-			addedToCart: '<?php echo addslashes($lang['added_to_cart'] ?? 'Added to cart!'); ?>',
-			failedToAddToCart: '<?php echo addslashes($lang['failed_to_add_to_cart'] ?? 'Failed to add to cart.'); ?>'
-		};
-	</script>
-	<script src="scripts.js"></script>
+    <script>
+        AOS.init();
+
+        function fetchCartCount() {
+            fetch('get_cart_count.php')
+            .then(response => response.json())
+            .then(data => {
+                const cartCountElement = document.querySelector('.cart-count');
+                if (data.count > 0) {
+                    if (cartCountElement) {
+                        cartCountElement.textContent = data.count;
+                    } else {
+                        const cartLink = document.querySelector('a[href="cart.php"]');
+                        cartLink.innerHTML += `<span class="cart-count">${data.count}</span>`;
+                    }
+                } else if (cartCountElement) {
+                    cartCountElement.remove();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function addToCart(foodId) {
+            fetch('add_to_cart.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'food_id=' + foodId + '&quantity=1'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    fetchCartCount();
+                    alert('<?php echo $lang['added_to_cart'] ?? 'Added to cart!'; ?>');
+                } else {
+                    alert(data.message || '<?php echo $lang['failed_to_add_to_cart'] ?? 'Failed to add to cart.'; ?>');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('<?php echo $lang['failed_to_add_to_cart'] ?? 'Failed to add to cart.'; ?>');
+            });
+        }
+
+        // Image Zoom Functionality
+        document.querySelectorAll('.zoomable-image').forEach(image => {
+            image.addEventListener('click', function() {
+                const fullImage = this.getAttribute('data-full-image');
+                const modalImage = document.getElementById('zoomedImage');
+                modalImage.src = fullImage;
+                const modal = new bootstrap.Modal(document.getElementById('imageZoomModal'));
+                modal.show();
+            });
+        });
+
+        // Category Carousel Drag Functionality
+        const categoryCarousel = document.querySelector('.category-items');
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        categoryCarousel.addEventListener('mousedown', (e) => {
+            isDown = true;
+            categoryCarousel.classList.add('active');
+            startX = e.pageX - categoryCarousel.offsetLeft;
+            scrollLeft = categoryCarousel.scrollLeft;
+        });
+
+        categoryCarousel.addEventListener('mouseleave', () => {
+            isDown = false;
+            categoryCarousel.classList.remove('active');
+        });
+
+        categoryCarousel.addEventListener('mouseup', () => {
+            isDown = false;
+            categoryCarousel.classList.remove('active');
+        });
+
+        categoryCarousel.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - categoryCarousel.offsetLeft;
+            const walk = (x - startX) * 2; // سرعت اسکرول
+            categoryCarousel.scrollLeft = scrollLeft - walk;
+        });
+
+        fetchCartCount();
+    </script>
 </body>
 </html>

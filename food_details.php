@@ -47,61 +47,6 @@ $stmt->execute();
 $result = $stmt->get_result();
 $food = $result->fetch_assoc();
 
-// Check if food exists
-if (!$food) {
-    // If food not found, display message and exit
-    ?>
-    <!DOCTYPE html>
-    <html lang="<?php echo $_SESSION['lang']; ?>" dir="<?php echo $direction; ?>">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title><?php echo $lang['food_not_found'] ?? 'Food Not Found'; ?></title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-        <link rel="stylesheet" href="style.css">
-    </head>
-    <body class="<?php echo $theme; ?>">
-        <!-- هدر -->
-        <div class="header">
-            <h1><?php echo $lang['food_details'] ?? 'Food Details'; ?></h1>
-            <div class="controls">
-                <select onchange="window.location='food_details.php?id=<?php echo $food_id; ?>&lang=' + this.value">
-                    <option value="en" <?php echo $_SESSION['lang'] == 'en' ? 'selected' : ''; ?>>English</option>
-                    <option value="fa" <?php echo $_SESSION['lang'] == 'fa' ? 'selected' : ''; ?>>فارسی</option>
-                    <option value="ar" <?php echo $_SESSION['lang'] == 'ar' ? 'selected' : ''; ?>>العربية</option>
-                </select>
-                <a href="food_details.php?id=<?php echo $food_id; ?>&theme=<?php echo $theme === 'light' ? 'dark' : 'light'; ?>">
-                    <i class="fas <?php echo $theme === 'light' ? 'fa-moon' : 'fa-sun'; ?>"></i>
-                    <?php echo $theme === 'light' ? ($lang['dark_mode'] ?? 'Dark Mode') : ($lang['light_mode'] ?? 'Light Mode'); ?>
-                </a>
-                <a href="cart.php">
-                    <i class="fas fa-shopping-cart"></i> <?php echo $lang['cart'] ?? 'Cart'; ?>
-                </a>
-                <?php if ($is_logged_in): ?>
-                    <a href="user_dashboard.php">
-                        <i class="fas fa-user"></i> <?php echo $lang['profile'] ?? 'Profile'; ?>
-                    </a>
-                    <a href="logout.php">
-                        <i class="fas fa-sign-out-alt"></i> <?php echo $lang['logout'] ?? 'Logout'; ?>
-                    </a>
-                <?php else: ?>
-                    <a href="user_login.php">
-                        <i class="fas fa-sign-in-alt"></i> <?php echo $lang['login'] ?? 'Login'; ?>
-                    </a>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <div class="container">
-            <p style="color: #dc3545;"><?php echo $lang['food_not_found'] ?? 'Food not found.'; ?></p>
-            <a href="menu.php" class="back"><?php echo $lang['back_to_menu'] ?? 'Back to Menu'; ?></a>
-        </div>
-    </body>
-    </html>
-    <?php
-    exit();
-}
 
 // Fetch language-specific columns
 $lang_name_col = 'name_' . $_SESSION['lang'];
@@ -146,56 +91,116 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $is_logged_in) {
 // Calculate cart item count
 $cart_items = $_SESSION['cart'] ?? [];
 $cart_count = 0;
-foreach ($cart_items as $quantity) {
-    $cart_count += $quantity;
+foreach ($cart_items as $item) {
+    $cart_count += $item['quantity'];
 }
-?>
 
+?>
 <!DOCTYPE html>
 <html lang="<?php echo $_SESSION['lang']; ?>" dir="<?php echo $direction; ?>">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($food[$lang_name_col]); ?></title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Bootstrap CSS -->
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+	<!-- Font Awesome for icons -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	<!-- AOS for animations -->
+	<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+	<!-- Custom CSS -->
+	<link rel="stylesheet" href="style.css">
 </head>
 <body class="<?php echo $theme; ?>">
-    <!-- هدر -->
-    <div class="header">
-        <h1><?php echo $lang['food_details'] ?? 'Food Details'; ?></h1>
-        <div class="controls">
-            <select onchange="window.location='food_details.php?id=<?php echo $food_id; ?>&lang=' + this.value">
-                <option value="en" <?php echo $_SESSION['lang'] == 'en' ? 'selected' : ''; ?>>English</option>
-                <option value="fa" <?php echo $_SESSION['lang'] == 'fa' ? 'selected' : ''; ?>>فارسی</option>
-                <option value="ar" <?php echo $_SESSION['lang'] == 'ar' ? 'selected' : ''; ?>>العربية</option>
-            </select>
-            <a href="food_details.php?id=<?php echo $food_id; ?>&theme=<?php echo $theme === 'light' ? 'dark' : 'light'; ?>">
-                <i class="fas <?php echo $theme === 'light' ? 'fa-moon' : 'fa-sun'; ?>"></i>
-                <?php echo $theme === 'light' ? ($lang['dark_mode'] ?? 'Dark Mode') : ($lang['light_mode'] ?? 'Light Mode'); ?>
-            </a>
-            <a href="cart.php">
-                <i class="fas fa-shopping-cart"></i> <?php echo $lang['cart'] ?? 'Cart'; ?>
-                <?php if ($cart_count > 0): ?>
-                    <span class="cart-count"><?php echo $cart_count; ?></span>
-                <?php endif; ?>
-            </a>
-            <?php if ($is_logged_in): ?>
-                <a href="user_dashboard.php">
-                    <i class="fas fa-user"></i> <?php echo $lang['profile'] ?? 'Profile'; ?>
-                </a>
-                <a href="logout.php">
-                    <i class="fas fa-sign-out-alt"></i> <?php echo $lang['logout'] ?? 'Logout'; ?>
-                </a>
-            <?php else: ?>
-                <a href="user_login.php">
-                    <i class="fas fa-sign-in-alt"></i> <?php echo $lang['login'] ?? 'Login'; ?>
-                </a>
-            <?php endif; ?>
+<!-- Language Bar -->
+	<div class="language-bar">
+		<div class="container-fluid">
+			<div class="language-switcher <?php echo $is_rtl ? 'text-start' : 'text-end'; ?>">
+				<a class="lang-link <?php echo $_SESSION['lang'] == 'en' ? 'active' : ''; ?>" href="food_details.php?lang=en<?php echo $food_id ? '&id=' . $food_id : ''; ?>">
+					<img src="images/flags/en.png" alt="English" class="flag-icon"> EN
+				</a>
+				<a class="lang-link <?php echo $_SESSION['lang'] == 'fa' ? 'active' : ''; ?>" href="food_details.php?lang=fa<?php echo $food_id ? '&id=' . $food_id : ''; ?>">
+					<img src="images/flags/fa.png" alt="Persian" class="flag-icon"> FA
+				</a>
+				<a class="lang-link <?php echo $_SESSION['lang'] == 'ar' ? 'active' : ''; ?>" href="food_details.php?lang=ar<?php echo $food_id ? '&id=' . $food_id : ''; ?>">
+					<img src="images/flags/ar.png" alt="Arabic" class="flag-icon"> AR
+				</a>
+				<a class="lang-link <?php echo $_SESSION['lang'] == 'fr' ? 'active' : ''; ?>" href="food_details.php?lang=fr<?php echo $food_id ? '&id=' . $food_id : ''; ?>">
+					<img src="images/flags/fr.png" alt="French" class="flag-icon"> FR
+				</a>
+			</div>
+		</div>
+	</div>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg custom-navbar">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse <?php echo $is_rtl ? '' : 'justify-content-end'; ?>" id="navbarNav">
+                <ul class="navbar-nav <?php echo $is_rtl ? 'nav-rtl' : ''; ?>">
+                    <?php if ($is_rtl): ?>
+                        <!-- RTL: Login/Logout on the far left -->
+                        <li class="nav-item login-item">
+                            <?php if ($is_logged_in): ?>
+                                <a class="nav-link" href="logout.php">
+                                    <i class="fas fa-sign-out-alt"></i> <?php echo $lang['logout'] ?? 'Logout'; ?>
+                                </a>
+                            <?php else: ?>
+                                <a class="nav-link" href="user_login.php">
+                                    <i class="fas fa-sign-in-alt"></i> <?php echo $lang['login'] ?? 'Login'; ?>
+                                </a>
+                            <?php endif; ?>
+                        </li>
+                    <?php endif; ?>
+                    <!-- Middle items -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="food_details.php?theme=<?php echo $theme === 'light' ? 'dark' : 'light'; ?><?php echo $category_id ? '&category_id=' . $category_id : ''; ?>">
+                            <i class="fas <?php echo $theme === 'light' ? 'fa-moon' : 'fa-sun'; ?>"></i>
+                            <?php echo $theme === 'light' ? ($lang['dark_mode'] ?? 'Dark Mode') : ($lang['light_mode'] ?? 'Light Mode'); ?>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="cart.php">
+                            <i class="fas fa-shopping-cart"></i> <?php echo $lang['cart'] ?? 'Cart'; ?>
+                            <?php if ($cart_count > 0): ?>
+                                <span class="cart-count"><?php echo $cart_count; ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                    <?php if ($is_logged_in && !$is_rtl): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="user_dashboard.php">
+                                <i class="fas fa-user"></i> <?php echo $lang['profile'] ?? 'Profile'; ?>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+                    <?php if ($is_rtl): ?>
+                        <!-- RTL: Profile in the middle -->
+                        <?php if ($is_logged_in): ?>
+                            <li class="nav-item">
+                                <a class="nav-link" href="user_dashboard.php">
+                                    <i class="fas fa-user"></i> <?php echo $lang['profile'] ?? 'Profile'; ?>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <!-- LTR: Login/Logout on the far right -->
+                        <li class="nav-item">
+                            <?php if ($is_logged_in): ?>
+                                <a class="nav-link" href="logout.php">
+                                    <i class="fas fa-sign-out-alt"></i> <?php echo $lang['logout'] ?? 'Logout'; ?>
+                                </a>
+                            <?php else: ?>
+                                <a class="nav-link" href="user_login.php">
+                                    <i class="fas fa-sign-in-alt"></i> <?php echo $lang['login'] ?? 'Login'; ?>
+                                </a>
+                            <?php endif; ?>
+                        </li>
+                    <?php endif; ?>
+                </ul>
+            </div>
         </div>
-    </div>
-
+    </nav>
     <div class="container">
         <!-- جزئیات غذا -->
         <div class="food-details" data-aos="fade-up">

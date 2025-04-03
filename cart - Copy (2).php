@@ -47,7 +47,7 @@ $is_rtl = in_array($_SESSION['lang'], $rtl_languages);
 $direction = $is_rtl ? 'rtl' : 'ltr';
 
 if (isset($_SESSION['user']) && is_array($_SESSION['user']) && isset($_SESSION['user']['id'])) {
-    $stmt = $conn->prepare("SELECT c.food_id, c.quantity, c.price, c.comment, f.name_" . $_SESSION['lang'] . " AS name FROM cart c JOIN foods f ON c.food_id = f.id WHERE c.user_id = ?");
+    $stmt = $conn->prepare("SELECT c.food_id, c.quantity, c.price, f.name_" . $_SESSION['lang'] . " AS name FROM cart c JOIN foods f ON c.food_id = f.id WHERE c.user_id = ?");
         $stmt->bind_param("i", $_SESSION['user']['id']);
         $stmt->execute();
         $cart_items = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -58,7 +58,6 @@ if (isset($_SESSION['user']) && is_array($_SESSION['user']) && isset($_SESSION['
                 'quantity' => $item['quantity'],
                 'price' => $item['price'],
                 'name' => $item['name'],
-				'comment' => $item['comment'],
             ];
         }
         $total_price = 0;
@@ -77,87 +76,72 @@ foreach ($cart_items as $item) {
     $cart_count += $item['quantity'];
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
-	if (!$is_logged_in) {
-			echo $lang['please_login'] ?? 'Please login to checkout.';
-			exit();
-	}
-        // شروع تراکنش دیتابیس
-        $conn->begin_transaction();
-        try {
-			if ($_POST['checkout'] == "1") {
-				// 1. درج سفارش در جدول orders
-				$stmt = $conn->prepare("INSERT INTO orders (user_id, total_price, vat_amount, grand_total, currency, status, created_at) VALUES (?, ?, ?, ?, ?, 'pending', NOW())");
-				$stmt->bind_param("iddds", $_SESSION['user']['id'], $total_price, $vat_amount, $grand_total, $currency);
-				$stmt->execute();
-				$order_id = $conn->insert_id; // ID سفارش جدید
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_cart'])) {
+    if (isset($_SESSION['user']) && is_array($_SESSION['user']) && isset($_SESSION['user']['id'])) {
+        foreach ($_POST['quantities'] as $food_id => $quantity) {
+            $existing_item = null;
+            foreach ($_SESSION['cart'] as $item) {
+                if ($item['id'] == $food_id) {
+                    $existing_item = $item;
+                    break;
+                }
+            }
 
-				// 2. درج آیتم‌های سفارش در جدول order_items
-				$stmt_items = $conn->prepare("INSERT INTO order_items (order_id, food_id, quantity, price) VALUES (?, ?, ?, ?)");
-				foreach ($_SESSION['cart'] as $item) {
-					$stmt_items->bind_param("iiid", $order_id, $item['id'], $item['quantity'], $item['price']);
-					$stmt_items->execute();
-				}
-				// 3. پاک کردن سبد خرید از دیتابیس و سشن
-				$stmt_clear = $conn->prepare("DELETE FROM cart WHERE user_id = ?");
-				$stmt_clear->bind_param("i", $_SESSION['user']['id']);
-				$stmt_clear->execute();
-				$_SESSION['cart'] = [];
-				$conn->commit();
-				// 4. هدایت به صفحه checkout با پارامتر order_id
-				header("Location: checkout.php?order_id=" . $order_id);
-				exit();
-            } else {
-				foreach ($_POST['quantities'] as $food_id => $quantity) {
-					$comment = isset($_POST['comments'][$food_id]) ? trim($_POST['comments'][$food_id]) : ''; // گرفتن مقدار کامنت
+            if ($quantity <= 0) {
+                // Delete from database
+                $stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ? AND food_id = ?");
+                $stmt->bind_param("ii", $_SESSION['user']['id'], $food_id);
+                $stmt->execute();
+            } elseif ($existing_item) {
+                // Update quantity in database
+                $stmt = $conn->prepare("UPDATE cart SET quantity = ?, price = ? WHERE user_id = ? AND food_id = ?");
+                $stmt->bind_param("idii", $quantity, $existing_item['price'], $_SESSION['user']['id'], $food_id);
+                $stmt->execute();
+            }
 
-					$existing_item = null;
-					foreach ($_SESSION['cart'] as $item) {
-						if ($item['id'] == $food_id) {
-							$existing_item = $item;
-							break;
-						}
-					}
-
-					if ($quantity <= 0) {
-						// Delete from database
-						$stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ? AND food_id = ?");
-						$stmt->bind_param("ii", $_SESSION['user']['id'], $food_id);
-						$stmt->execute();
-					} elseif ($existing_item) {
-						// Update quantity and comment in database
-						$stmt = $conn->prepare("UPDATE cart SET quantity = ?, price = ?, comment = ? WHERE user_id = ? AND food_id = ?");
-						$stmt->bind_param("idsii", $quantity, $existing_item['price'], $comment, $_SESSION['user']['id'], $food_id);
-						if (!$stmt->execute()) {
-							file_put_contents('debug.txt', "Update failed for food_id $food_id: " . $conn->error . "\n", FILE_APPEND);
-						}
-					}
-
-					// Update session
-					foreach ($_SESSION['cart'] as $key => &$item) {
-						if ($item['id'] == $food_id) {
-							if ($quantity <= 0) {
-								unset($_SESSION['cart'][$key]);
-							} else {
-								$item['quantity'] = $quantity;
-								$item['comment'] = $comment; // به‌روزرسانی کامنت توی سشن
-							}
-							break;
-						}
-					}
-				}
-				$_SESSION['cart'] = array_values($_SESSION['cart']);
-				$conn->commit();
-				header("Location: menu.php"); // هدایت به menu.php بعد از به‌روزرسانی
-				exit();
-			}
-
-        } catch (Exception $e) {
-            $conn->rollback();
-            echo "An error occurred during checkout. Please try again.";
+            // Update session
+            foreach ($_SESSION['cart'] as $key => &$item) {
+                if ($item['id'] == $food_id) {
+                    if ($quantity <= 0) {
+                        unset($_SESSION['cart'][$key]);
+                    } else {
+                        $item['quantity'] = $quantity;
+                    }
+                    break;
+                }
+            }
         }
+        $_SESSION['cart'] = array_values($_SESSION['cart']);
+    }
 }
+
+if (isset($_GET['clear_cart'])) {
+    if (isset($_SESSION['user']) && is_array($_SESSION['user']) && isset($_SESSION['user']['id'])) {
+        $stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ?");
+        $stmt->bind_param("i", $_SESSION['user']['id']);
+        $stmt->execute();
+    }
+    $_SESSION['cart'] = [];
+}
+
+if (isset($_GET['remove_item']) && isset($_GET['food_id'])) {
+    $food_id = $_GET['food_id'];
+    if (isset($_SESSION['user']) && is_array($_SESSION['user']) && isset($_SESSION['user']['id'])) {
+        $stmt = $conn->prepare("DELETE FROM cart WHERE user_id = ? AND food_id = ?");
+        $stmt->bind_param("ii", $_SESSION['user']['id'], $food_id);
+        $stmt->execute();
+    }
+    foreach ($_SESSION['cart'] as $key => $item) {
+        if ($item['id'] == $food_id) {
+            unset($_SESSION['cart'][$key]);
+            break;
+        }
+    }
+    $_SESSION['cart'] = array_values($_SESSION['cart']);
+}
+
 ?>
+
 <!DOCTYPE html>
 <html lang="<?php echo $_SESSION['lang']; ?>" dir="<?php echo $direction; ?>">
 <head>
@@ -180,16 +164,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
 		<div class="container-fluid">
 			<div class="language-switcher <?php echo $is_rtl ? 'text-start' : 'text-end'; ?>">
 				<a class="lang-link <?php echo $_SESSION['lang'] == 'en' ? 'active' : ''; ?>" href="cart.php?lang=en">
-					<img src="images/flags/en.png" alt="English" class="flag-icon"> EN
+					<img src="https://flagcdn.com/20x15/gb.png" alt="English" class="flag-icon"> EN
 				</a>
 				<a class="lang-link <?php echo $_SESSION['lang'] == 'fa' ? 'active' : ''; ?>" href="cart.php?lang=fa">
-					<img src="images/flags/fa.png" alt="Persian" class="flag-icon"> FA
+					<img src="https://flagcdn.com/20x15/ir.png" alt="Persian" class="flag-icon"> FA
 				</a>
 				<a class="lang-link <?php echo $_SESSION['lang'] == 'ar' ? 'active' : ''; ?>" href="cart.php?lang=ar">
-					<img src="images/flags/ar.png" alt="Arabic" class="flag-icon"> AR
+					<img src="https://flagcdn.com/20x15/sa.png" alt="Arabic" class="flag-icon"> AR
 				</a>
 				<a class="lang-link <?php echo $_SESSION['lang'] == 'fr' ? 'active' : ''; ?>" href="cart.php?lang=fr">
-					<img src="images/flags/fr.png" alt="French" class="flag-icon"> FR
+					<img src="https://flagcdn.com/20x15/fr.png" alt="French" class="flag-icon"> FR
 				</a>
 			</div>
 		</div>
@@ -197,6 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg custom-navbar">
         <div class="container-fluid">
+            <span class="navbar-brand"><?php echo $lang['chekout'] ?? 'Chekout'; ?></span>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -265,10 +250,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
             </div>
         </div>
     </nav>
+
     <div class="container">
         <!-- سبد خرید -->
         <div class="cart" data-aos="fade-up">
-            <h2><?php echo $lang['shopping_cart'] ?? 'Shopping Cart'; ?></h2>
+            <h2><?php echo $lang['your_cart'] ?? 'Your Cart'; ?></h2>
             <?php if (!empty($_SESSION['cart'])): ?> <!-- اصلاح شرط -->
 				<section class="cart-summary">
 					<form method="POST">
@@ -278,41 +264,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
 									<th><?php echo $lang['food'] ?? 'Food'; ?></th>
 									<th><?php echo $lang['quantity'] ?? 'Quantity'; ?></th>
 									<th><?php echo $lang['price'] ?? 'Price'; ?></th>
-									<th><?php echo $lang['subtotal'] ?? 'SubTotal'; ?></th>
-									<th><?php echo $lang['Special_Request'] ?? 'Special Request'; ?></th>
+									<th><?php echo $lang['total'] ?? 'Total'; ?></th>
 									<th><?php echo $lang['actions'] ?? 'Actions'; ?></th>
 								</tr>
 							</thead>
-							<tbody>
-								<?php foreach ($_SESSION['cart'] as $item): ?>
-									<tr>
-										<td class="item-name"><?php echo htmlspecialchars($item['name']); ?></td>
-										<td><input type="number" name="quantities[<?php echo $item['id']; ?>]" value="<?php echo $item['quantity']; ?>" min="0" style="width: 50px;"></td>
-										<td><?php echo number_format($item['price'], $currency_Decimal); ?> <?php echo $currency; ?></td>
-										<td><?php echo number_format($item['price'] * $item['quantity'], $currency_Decimal); ?> <?php echo $currency; ?></td>
-										<td class="comment-column"><input type="text" name="comments[<?php echo $item['id']; ?>]" value="<?php echo htmlspecialchars($item['comment'] ?? ''); ?>"></td>
-										<td><a href="cart.php?remove_item=1&food_id=<?php echo $item['id']; ?>" class="button"><i class="fas fa-trash"></i></a></td>
-									</tr>
-								<?php endforeach; ?>
-							</tbody>
+						<tbody>
+							<?php foreach ($_SESSION['cart'] as $item): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($item['name']); ?></td>
+                                    <td><input type="number" name="quantities[<?php echo $item['id']; ?>]" value="<?php echo $item['quantity']; ?>" min="0"></td>
+                                    <td><?php echo number_format($item['price'], 2); ?> <?php echo $currency; ?></td>
+                                    <td><?php echo number_format($item['price'] * $item['quantity'], 2); ?> <?php echo $currency; ?></td>
+                                    <td><a href="cart.php?remove_item=1&food_id=<?php echo $item['id']; ?>" class="button"><i class="fas fa-trash"></i></a></td>
+                                </tr>
+                            <?php endforeach; ?>                    </tbody>
 						</table>
                 <div class="cart-summary">
                     <div class="total">
                         <?php echo $lang['total'] ?? 'Total'; ?>: <?php echo number_format($total_price, $currency_Decimal); ?> <?php echo $currency; ?>
-						<p><?php echo $lang['VAT'] ?? 'VAT'; ?> (<?php echo $vat_rate * 100; ?>%): <?php echo number_format($vat_amount, $currency_Decimal); ?> <?php echo $currency; ?></p>
+						<p>VAT (<?php echo $vat_rate * 100; ?>%): <?php echo number_format($vat_amount, $currency_Decimal); ?> <?php echo $currency; ?></p>
 						<p class="grand-total"><?php echo $lang['grand_total'] ?? 'Grand Total'; ?>: <?php echo number_format($grand_total, $currency_Decimal); ?> <?php echo $currency; ?></p>
                     </div>
                     <div>
-						<form action="cart.php" method="POST">
-							<input type="hidden" name="checkout" value="2">
-							<button type="submit" class="continue-shopping">
-								<i class="fas fa-arrow-left"></i> <?php echo $lang['continue_shopping'] ?? 'Continue Shopping'; ?>
-							</button>
-							<input type="hidden" name="checkout" value="1">
-							<button type="submit" class="checkout-btn">
-								<i class="fas fa-credit-card"></i> <?php echo $lang['checkout'] ?? 'Checkout'; ?>
-							</button>
-						</form>
+                        <a href="menu.php" class="continue-shopping">
+                            <i class="fas fa-arrow-left"></i> <?php echo $lang['continue_shopping'] ?? 'Continue Shopping'; ?>
+                        </a>
+						<a href="checkout.php" class="checkout-btn">
+							<i class="fas fa-credit-card"></i> <?php echo $lang['checkout'] ?? 'Checkout'; ?>
+						</a>
                     </div>
                 </div>
             <?php else: ?>
@@ -350,6 +329,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
 		// بارگذاری اولیه تعداد آیتم‌ها
 		fetchCartCount();
     </script>
-
 </body>
 </html>

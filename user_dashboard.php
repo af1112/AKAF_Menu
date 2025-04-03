@@ -3,10 +3,9 @@ session_start();
 include 'db.php';
 
 // Check if user is logged in
-if (!isset($_SESSION['user']) || !is_array($_SESSION['user']) || !isset($_SESSION['user']['id'])) {
-    header("Location: user_login.php");
-    exit();
-}
+$is_logged_in = isset($_SESSION['user']) && is_array($_SESSION['user']) && isset($_SESSION['user']['id']);
+$user_id = $is_logged_in ? $_SESSION['user']['id'] : null;
+$username = $is_logged_in ? $_SESSION['user']['username'] : null;
 
 $user_id = $_SESSION['user']['id'];
 
@@ -18,6 +17,15 @@ if (isset($_GET['lang'])) {
     $_SESSION['lang'] = $_GET['lang'];
 }
 include "languages/" . $_SESSION['lang'] . ".php";
+
+// Manage theme
+if (!isset($_SESSION['theme'])) {
+    $_SESSION['theme'] = 'light';
+}
+if (isset($_GET['theme'])) {
+    $_SESSION['theme'] = $_GET['theme'] === 'dark' ? 'dark' : 'light';
+}
+$theme = $_SESSION['theme'];
 
 // Detect language direction
 $rtl_languages = ['fa', 'ar'];
@@ -57,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     if (empty($name) || empty($email) || empty($phone)) {
         $error = $lang['fill_all_fields'] ?? 'Please fill all fields.';
     } else {
-        $stmt = $conn->prepare("UPDATE users SET name = ?, email = ?, phone = ? WHERE id = ?");
+        $stmt = $conn->prepare("UPDATE users SET fullname = ?, email = ?, phone = ? WHERE id = ?");
         $stmt->bind_param("sssi", $name, $email, $phone, $user_id);
         if ($stmt->execute()) {
             $success = $lang['profile_updated'] ?? 'Profile updated successfully!';
@@ -77,221 +85,109 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $lang['user_dashboard'] ?? 'User Dashboard'; ?></title>
+    <title><?php echo $lang['cart'] ?? 'Cart'; ?></title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- AOS for animations -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        /* هدر */
-        .header {
-            background: linear-gradient(to right, #ff6f61, #ff9f43);
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 1.8rem;
-        }
-
-        .header .controls {
-            display: flex;
-            gap: 15px;
-        }
-
-        .header select, .header a {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .header select {
-            background-color: #fff;
-            color: #333;
-        }
-
-        .header a {
-            background-color: #fff;
-            color: #ff6f61;
-            text-decoration: none;
-            position: relative;
-        }
-
-        .header a:hover, .header select:hover {
-            background-color: #f0f0f0;
-        }
-
-        .header .cart-count {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background-color: #dc3545;
-            color: white;
-            border-radius: 50%;
-            padding: 2px 6px;
-            font-size: 0.8rem;
-        }
-
-        /* داشبورد */
-        .dashboard {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .dashboard h2 {
-            color: #ff6f61;
-            margin: 0 0 20px;
-        }
-
-        .profile, .orders {
-            margin-bottom: 30px;
-        }
-
-        .profile h3, .orders h3 {
-            color: #333;
-            margin: 0 0 15px;
-        }
-
-        .profile form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            max-width: 500px;
-        }
-
-        .profile label {
-            font-weight: bold;
-        }
-
-        .profile input {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 1rem;
-        }
-
-        .profile .error, .profile .success {
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-
-        .profile .error {
-            background-color: #f8d7da;
-            color: #dc3545;
-        }
-
-        .profile .success {
-            background-color: #d4edda;
-            color: #28a745;
-        }
-
-        .profile button {
-            padding: 10px 20px;
-            background-color: #ff6f61;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .profile button:hover {
-            background-color: #e65b50;
-        }
-
-        .orders-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        .orders-table th, .orders-table td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        .orders-table th {
-            background-color: #f9f9f9;
-            color: #ff6f61;
-        }
-
-        .orders-table td {
-            color: #666;
-        }
-
-        /* ریسپانسیو */
-        @media (max-width: 768px) {
-            .orders-table th, .orders-table td {
-                font-size: 0.9rem;
-                padding: 8px;
-            }
-
-            .header h1 {
-                font-size: 1.5rem;
-            }
-
-            .header .controls {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-    </style>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- هدر -->
-    <div class="header">
-        <h1><?php echo $lang['user_dashboard'] ?? 'User Dashboard'; ?></h1>
-        <div class="controls">
-            <select onchange="window.location='user_dashboard.php?lang=' + this.value">
-                <option value="en" <?php echo $_SESSION['lang'] == 'en' ? 'selected' : ''; ?>>English</option>
-                <option value="fa" <?php echo $_SESSION['lang'] == 'fa' ? 'selected' : ''; ?>>فارسی</option>
-                <option value="ar" <?php echo $_SESSION['lang'] == 'ar' ? 'selected' : ''; ?>>العربية</option>
-            </select>
-            <a href="cart.php">
-                <i class="fas fa-shopping-cart"></i> <?php echo $lang['cart'] ?? 'Cart'; ?>
-                <?php if ($cart_count > 0): ?>
-                    <span class="cart-count"><?php echo $cart_count; ?></span>
-                <?php endif; ?>
-            </a>
-            <a href="logout.php">
-                <i class="fas fa-sign-out-alt"></i> <?php echo $lang['logout'] ?? 'Logout'; ?>
-            </a>
+		<!-- Language Bar -->
+	<div class="language-bar">
+		<div class="container-fluid">
+			<div class="language-switcher <?php echo $is_rtl ? 'text-start' : 'text-end'; ?>">
+				<a class="lang-link <?php echo $_SESSION['lang'] == 'en' ? 'active' : ''; ?>" href="user_dashboard.php?lang=en">
+					<img src="images/flags/en.png" alt="English" class="flag-icon"> EN
+				</a>
+				<a class="lang-link <?php echo $_SESSION['lang'] == 'fa' ? 'active' : ''; ?>" href="user_dashboard.php?lang=fa">
+					<img src="images/flags/fa.png" alt="Persian" class="flag-icon"> FA
+				</a>
+				<a class="lang-link <?php echo $_SESSION['lang'] == 'ar' ? 'active' : ''; ?>" href="user_dashboard.php?lang=ar">
+					<img src="images/flags/ar.png" alt="Arabic" class="flag-icon"> AR
+				</a>
+				<a class="lang-link <?php echo $_SESSION['lang'] == 'fr' ? 'active' : ''; ?>" href="user_dashboard.php?lang=fr">
+					<img src="images/flags/fr.png" alt="French" class="flag-icon"> FR
+				</a>
+			</div>
+		</div>
+	</div>			
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg custom-navbar">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse <?php echo $is_rtl ? '' : 'justify-content-end'; ?>" id="navbarNav">
+                <ul class="navbar-nav <?php echo $is_rtl ? 'nav-rtl' : ''; ?>">
+                    <?php if ($is_rtl): ?>
+                        <!-- RTL: Login/Logout on the far left -->
+                        <li class="nav-item login-item">
+                            <?php if ($is_logged_in): ?>
+                                <a class="nav-link" href="logout.php">
+                                    <i class="fas fa-sign-out-alt"></i> <?php echo $lang['logout'] ?? 'Logout'; ?>
+                                </a>
+                            <?php else: ?>
+                                <a class="nav-link" href="user_login.php">
+                                    <i class="fas fa-sign-in-alt"></i> <?php echo $lang['login'] ?? 'Login'; ?>
+                                </a>
+                            <?php endif; ?>
+                        </li>
+                    <?php endif; ?>
+                    <!-- Middle items -->
+                    <li class="nav-item">
+						<li class="nav-item">
+							<a class="nav-link" href="index.php">
+								<i class="fas fa-user"></i> <?php echo $lang['home'] ?? 'Home'; ?>
+							</a>
+						</li>
+                        <a class="nav-link" href="checkout.php?theme=<?php echo $theme === 'light' ? 'dark' : 'light'; ?>">
+                            <i class="fas <?php echo $theme === 'light' ? 'fa-moon' : 'fa-sun'; ?>"></i>
+                            <?php echo $theme === 'light' ? ($lang['dark_mode'] ?? 'Dark Mode') : ($lang['light_mode'] ?? 'Light Mode'); ?>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link position-relative" href="cart.php">
+                            <i class="fas fa-shopping-cart"></i> <?php echo $lang['cart'] ?? 'Cart'; ?>
+                            <?php if ($cart_count > 0): ?>
+                                <span class="cart-count"><?php echo $cart_count; ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
+                    <?php if ($is_logged_in && !$is_rtl): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="user_dashboard.php">
+                                <i class="fas fa-user"></i> <?php echo $lang['profile'] ?? 'Profile'; ?>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+                    <?php if ($is_rtl): ?>
+                    <?php else: ?>
+                        <!-- LTR: Login/Logout on the far right -->
+                        <li class="nav-item">
+                            <?php if ($is_logged_in): ?>
+                                <a class="nav-link" href="logout.php">
+                                    <i class="fas fa-sign-out-alt"></i> <?php echo $lang['logout'] ?? 'Logout'; ?>
+                                </a>
+                            <?php else: ?>
+                                <a class="nav-link" href="user_login.php">
+                                    <i class="fas fa-sign-in-alt"></i> <?php echo $lang['login'] ?? 'Login'; ?>
+                                </a>
+                            <?php endif; ?>
+                        </li>
+                    <?php endif; ?>
+                </ul>
+            </div>
         </div>
-    </div>
+    </nav>
 
     <div class="container">
         <!-- داشبورد -->
         <div class="dashboard" data-aos="fade-up">
-            <h2><?php echo $lang['welcome'] ?? 'Welcome'; ?>, <?php echo htmlspecialchars($user['name']); ?>!</h2>
-
             <!-- پروفایل -->
             <div class="profile">
                 <h3><?php echo $lang['profile'] ?? 'Profile'; ?></h3>
@@ -304,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
                 <form method="POST">
                     <input type="hidden" name="update_profile" value="1">
                     <label for="name"><?php echo $lang['name'] ?? 'Name'; ?>:</label>
-                    <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($user['name']); ?>" required>
+                    <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($user['fullname']); ?>" required>
                     <label for="email"><?php echo $lang['email'] ?? 'Email'; ?>:</label>
                     <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
                     <label for="phone"><?php echo $lang['phone'] ?? 'Phone'; ?>:</label>

@@ -26,6 +26,7 @@ $stmt = $conn->prepare("SELECT value FROM settings WHERE `key` = 'apply_vat'");
 $stmt->execute();
 $apply_vat = intval($stmt->get_result()->fetch_assoc()['value'] ?? 0);
 
+
 // Manage theme
 if (!isset($_SESSION['theme'])) {
     $_SESSION['theme'] = 'light';
@@ -39,10 +40,8 @@ $theme = $_SESSION['theme'];
 $is_logged_in = isset($_SESSION['user']) && is_array($_SESSION['user']) && isset($_SESSION['user']['id']);
 $user_id = $is_logged_in ? $_SESSION['user']['id'] : null;
 
-if (!$is_logged_in) {
-    header("Location: user_login.php");
-    exit();
-}
+
+$user_id = $_SESSION['user']['id'];
 
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->bind_param("i", $user_id);
@@ -63,34 +62,33 @@ $rtl_languages = ['fa', 'ar'];
 $is_rtl = in_array($_SESSION['lang'], $rtl_languages);
 $direction = $is_rtl ? 'rtl' : 'ltr';
 
-// دریافت اطلاعات سفارش از جدول orders
-$stmt_order = $conn->prepare("SELECT total_price, vat_amount, grand_total FROM orders WHERE id = ? AND user_id = ?");
-$stmt_order->bind_param("ii", $order_id, $user_id);
-$stmt_order->execute();
-$order = $stmt_order->get_result()->fetch_assoc();
+// Fetch cart items
+$cart_items = $_SESSION['cart'] ?? [];
+$cart_details = [];
+$total_price = 0;
+
+// دریافت اطلاعات سفارش
+$stmt = $conn->prepare("SELECT * FROM orders WHERE id = ? AND user_id = ?");
+$stmt->bind_param("ii", $order_id, $_SESSION['user']['id']);
+$stmt->execute();
+$order = $stmt->get_result()->fetch_assoc();
 
 if (!$order) {
     header("Location: cart.php");
     exit();
 }
 
-// استخراج مقادیر از سفارش
-$total_price = $order['total_price'] ?? 0;
-$vat_amount = $order['vat_amount'] ?? 0;
-$grand_total = $order['grand_total'] ?? 0;
-
 // دریافت آیتم‌های سفارش
-$stmt_items = $conn->prepare("SELECT oi.quantity, oi.price, oi.comment, f.name_" . $_SESSION['lang'] . " AS name FROM order_items oi JOIN foods f ON oi.food_id = f.id WHERE oi.order_id = ?");
+$stmt_items = $conn->prepare("SELECT oi.quantity, oi.price, f.name_" . $_SESSION['lang'] . " AS name FROM order_items oi JOIN foods f ON oi.food_id = f.id WHERE oi.order_id = ?");
 $stmt_items->bind_param("i", $order_id);
 $stmt_items->execute();
 $order_items = $stmt_items->get_result()->fetch_all(MYSQLI_ASSOC);
-
-$quantity = $order_items['quantity'] ?? 0;
-$comment = $order_items['comment'] ?? 0;
-
-// Calculate cart item count (optional, since cart is empty after checkout)
-$cart_count = 0; // No need to calculate this here as cart should be empty
-
+// Calculate cart item count
+$cart_items = $_SESSION['cart'] ?? [];
+$cart_count = 0;
+foreach ($cart_items as $item) {
+    $cart_count += $item['quantity'];
+}
 ?>
 
 <!DOCTYPE html>
@@ -98,7 +96,7 @@ $cart_count = 0; // No need to calculate this here as cart should be empty
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $lang['checkout'] ?? 'Checkout'; ?></title>
+    <title><?php echo $lang['checkout'] ?? 'checkout'; ?></title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <!-- Font Awesome for icons -->
@@ -107,27 +105,23 @@ $cart_count = 0; // No need to calculate this here as cart should be empty
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const radios = document.querySelectorAll('input[name="delivery_type"]');
-            const fields = {
-                'dine-in': document.getElementById('dine-in-fields'),
-                'delivery': document.getElementById('delivery-fields'),
-                'takeaway': document.getElementById('takeaway-fields'),
-                'drive-thru': document.getElementById('drive-thru-fields'),
-                'contactless': document.getElementById('contactless-fields'),
-                'self-service': document.getElementById('self-service-fields'),
-                'curbside': document.getElementById('curbside-fields')
-            };
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			const radios = document.querySelectorAll('input[name="delivery_type"]');
+			const fields = {
+				'dine-in': document.getElementById('dine-in-fields'),
+				'delivery': document.getElementById('delivery-fields')
+				// برای گزینه‌های دیگه فیلد اضافه کنید
+			};
 
-            radios.forEach(radio => {
-                radio.addEventListener('change', function() {
-                    Object.values(fields).forEach(field => field.style.display = 'none');
-                    if (fields[this.value]) fields[this.value].style.display = 'block';
-                });
-            });
-        });
-    </script>
+			radios.forEach(radio => {
+				radio.addEventListener('change', function() {
+					Object.values(fields).forEach(field => field.style.display = 'none');
+					if (fields[this.value]) fields[this.value].style.display = 'block';
+				});
+			});
+		});
+	</script>
 </head>
 <body class="<?php echo $theme; ?>">
     <!-- هدر -->
@@ -135,24 +129,26 @@ $cart_count = 0; // No need to calculate this here as cart should be empty
 	<div class="language-bar">
 		<div class="container-fluid">
 			<div class="language-switcher <?php echo $is_rtl ? 'text-start' : 'text-end'; ?>">
-				<a class="lang-link <?php echo $_SESSION['lang'] == 'en' ? 'active' : ''; ?>" href="cart.php?lang=en">
-					<img src="images/flags/en.png" alt="English" class="flag-icon"> EN
+				<a class="lang-link <?php echo $_SESSION['lang'] == 'en' ? 'active' : ''; ?>" href="checkout.php?lang=en">
+					<img src="https://flagcdn.com/20x15/gb.png" alt="English" class="flag-icon"> EN
 				</a>
-				<a class="lang-link <?php echo $_SESSION['lang'] == 'fa' ? 'active' : ''; ?>" href="cart.php?lang=fa">
-					<img src="images/flags/fa.png" alt="Persian" class="flag-icon"> FA
+				<a class="lang-link <?php echo $_SESSION['lang'] == 'fa' ? 'active' : ''; ?>" href="checkout.php?lang=fa">
+					<img src="https://flagcdn.com/20x15/ir.png" alt="Persian" class="flag-icon"> FA
 				</a>
-				<a class="lang-link <?php echo $_SESSION['lang'] == 'ar' ? 'active' : ''; ?>" href="cart.php?lang=ar">
-					<img src="images/flags/ar.png" alt="Arabic" class="flag-icon"> AR
+				<a class="lang-link <?php echo $_SESSION['lang'] == 'ar' ? 'active' : ''; ?>" href="checkout.php?lang=ar">
+					<img src="https://flagcdn.com/20x15/sa.png" alt="Arabic" class="flag-icon"> AR
 				</a>
-				<a class="lang-link <?php echo $_SESSION['lang'] == 'fr' ? 'active' : ''; ?>" href="cart.php?lang=fr">
-					<img src="images/flags/fr.png" alt="French" class="flag-icon"> FR
+				<a class="lang-link <?php echo $_SESSION['lang'] == 'fr' ? 'active' : ''; ?>" href="checkout.php?lang=fr">
+					<img src="https://flagcdn.com/20x15/fr.png" alt="French" class="flag-icon"> FR
 				</a>
 			</div>
 		</div>
 	</div>			
+
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg custom-navbar">
         <div class="container-fluid">
+            <span class="navbar-brand"><?php echo $lang['chekout'] ?? 'Chekout'; ?></span>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -222,6 +218,7 @@ $cart_count = 0; // No need to calculate this here as cart should be empty
         </div>
     </nav>
 
+
     <div class="container">
         <!-- پرداخت -->
         <div class="checkout" data-aos="fade-up">
@@ -242,74 +239,105 @@ $cart_count = 0; // No need to calculate this here as cart should be empty
                                 <th><?php echo $lang['price'] ?? 'Price'; ?></th>
                                 <th><?php echo $lang['quantity'] ?? 'Quantity'; ?></th>
                                 <th><?php echo $lang['subtotal'] ?? 'Subtotal'; ?></th>
-								<th><?php echo $lang['Special_Request'] ?? 'Special Request'; ?></th>
-								<th><?php echo $lang['actions'] ?? 'Actions'; ?></th>
-							</tr>
+                            </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($order_items as $item): ?>
                                 <tr>
                                     <td class="item-name"><?php echo htmlspecialchars($item['name']); ?></td>
                                     <td><?php echo number_format($item['price'], $currency_Decimal); ?> <?php echo $currency; ?></td>
-									<td><input type="number" name="quantities[<?php echo $item['quantity']; ?>]" value="<?php echo $quantity; ?>" min="0" style="width: 50px;"></td>
-                                    <td><?php echo number_format($item['price'] * $item['quantity'], $currency_Decimal); ?> <?php echo $currency; ?></td>
-									<td class="comment-column"><input type="text" name="comments[<?php echo $item['comment']; ?>]" value="<?php echo htmlspecialchars($comment ?? ''); ?>"></td>
-									<td><a href="cart.php?remove_item=1&food_id=<?php echo $item['id']; ?>" class="button"><i class="fas fa-trash"></i></a></td>
-								</tr>
+                                    <td><?php echo $item['quantity']; ?></td>
+                                    <td><?php echo number_format($item['subtotal'], $currency_Decimal); ?> <?php echo $currency; ?></td>
+                                </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
                     <div class="total">
                         <?php echo $lang['total'] ?? 'Total'; ?>: <?php echo number_format($total_price, $currency_Decimal); ?> <?php echo $currency; ?>
-                        <p>VAT (<?php echo $vat_rate * 100; ?>%): <?php echo number_format($vat_amount, $currency_Decimal); ?> <?php echo $currency; ?></p>
-                        <p class="grand-total"><?php echo $lang['grand_total'] ?? 'Grand Total'; ?>: <?php echo number_format($grand_total, $currency_Decimal); ?> <?php echo $currency; ?></p>
+						<p>VAT (<?php echo $vat_rate * 100; ?>%): <?php echo number_format($vat_amount, $currency_Decimal); ?> <?php echo $currency; ?></p>
+						<p class="grand-total"><?php echo $lang['grand_total'] ?? 'Grand Total'; ?>: <?php echo number_format($grand_total, $currency_Decimal); ?> <?php echo $currency; ?></p>
                     </div>
-                    <div class="delivery-options">
-                        <h3><?php echo $lang['delivery_options'] ?? 'Delivery Options'; ?></h3>
-                        <label><input type="radio" name="delivery_type" value="dine-in" required> <?php echo $lang['dine_in'] ?? 'Dine-In'; ?></label><br>
-                        <label><input type="radio" name="delivery_type" value="takeaway"> <?php echo $lang['takeaway'] ?? 'Takeaway / Pick-up'; ?></label><br>
-                        <label><input type="radio" name="delivery_type" value="delivery"> <?php echo $lang['delivery'] ?? 'Delivery'; ?></label><br>
-                        <label><input type="radio" name="delivery_type" value="drive-thru"> <?php echo $lang['drive_thru'] ?? 'Drive-Thru'; ?></label><br>
-                        <label><input type="radio" name="delivery_type" value="contactless"> <?php echo $lang['contactless_delivery'] ?? 'Contactless Delivery'; ?></label><br>
-                        <label><input type="radio" name="delivery_type" value="self-service"> <?php echo $lang['self_service'] ?? 'Self Service'; ?></label><br>
-                        <label><input type="radio" name="delivery_type" value="curbside"> <?php echo $lang['curbside_pickup'] ?? 'Curbside Pickup'; ?></label><br>
-                        <div class="total">
-                            <h3><?php echo $lang['Required_information_for_food_Delivery'] ?? 'Required information for food Delivery'; ?></h3>
-                        </div>
-                        <div id="dine-in-fields" style="display:none;">
-                            <label><?php echo $lang['table_number'] ?? 'Table Number'; ?>:</label>
-                            <input type="text" name="table_number">
-                        </div>
-                        <div id="delivery-fields" style="display:none;">
-                            <label><?php echo $lang['address'] ?? 'Address'; ?>:</label>
-                            <input type="text" name="address">
-                            <label><?php echo $lang['contact_info'] ?? 'Contact Info'; ?>:</label>
-                            <input type="text" name="contact_info">
-                        </div>
-                        <!-- می‌تونید برای گزینه‌های دیگر فیلد اضافه کنید -->
-                    </div>
+					<div class="delivery-options">
+						<h3><?php echo $lang['delivery_options'] ?? 'Delivery Options'; ?></h3>
+						<label><input type="radio" name="delivery_type" value="dine-in" required> <?php echo $lang['dine_in'] ?? 'Dine-In'; ?></label><br>
+						<label><input type="radio" name="delivery_type" value="takeaway"> <?php echo $lang['takeaway'] ?? 'Takeaway / Pick-up'; ?></label><br>
+						<label><input type="radio" name="delivery_type" value="delivery"> <?php echo $lang['delivery'] ?? 'Delivery'; ?></label><br>
+						<label><input type="radio" name="delivery_type" value="drive-thru"> <?php echo $lang['drive_thru'] ?? 'Drive-Thru'; ?></label><br>
+						<label><input type="radio" name="delivery_type" value="contactless"> <?php echo $lang['contactless_delivery'] ?? 'Contactless Delivery'; ?></label><br>
+						<label><input type="radio" name="delivery_type" value="self-service"> <?php echo $lang['self_service'] ?? 'Self Service'; ?></label><br>
+						<label><input type="radio" name="delivery_type" value="curbside"> <?php echo $lang['curbside_pickup'] ?? 'Curbside Pickup'; ?></label><br>
+						<div class="total">
+							<h3><?php echo $lang['Required_information_for_food_Delivery'] ?? 'Required information for food Delivery'; ?></h3>
+						</div>
+							<div id="dine-in-fields" style="display:none;">
+							<label><?php echo $lang['table_number'] ?? 'Table Number'; ?>:</label>
+							<input type="text" name="table_number">
+						</div>
+						<div id="delivery-fields" style="display:none;">
+							<label><?php echo $lang['address'] ?? 'Address'; ?>:</label>
+							<input type="text" name="address">
+							<label><?php echo $lang['contact_info'] ?? 'Contact Info'; ?>:</label>
+							<input type="text" name="contact_info">
+						</div>
+						<!-- می‌تونید برای گزینه‌های دیگه فیلد اضافه کنید -->
+					</div>
                 </div>
 
                 <!-- فرم پرداخت -->
                 <div class="checkout-form">
                     <h3><?php echo $lang['shipping_info'] ?? 'Shipping Information'; ?></h3>
-                    <form method="POST">
-                        <label for="name"><?php echo $lang['name'] ?? 'Name'; ?>:</label>
-                        <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($user['fullname']); ?>" required>
-                        <label for="phone"><?php echo $lang['phone'] ?? 'Phone'; ?>:</label>
-                        <input type="tel" id="phone" name="phone" value="<?php echo htmlspecialchars($user['phone'] ?? ''); ?>" required>
-                        <button type="submit">
-                            <i class="fas fa-check"></i> <?php echo $lang['place_order'] ?? 'Place Order'; ?>
-                        </button>
-                    </form>
+                    <?php if (isset($error)): ?>
+                        <div class="error"><?php echo $error; ?></div>
+                    <?php endif; ?>
+                    <?php if (isset($success)): ?>
+                        <div class="success"><?php echo $success; ?></div>
+                        <a href="menu.php" class="continue-shopping">
+                            <i class="fas fa-arrow-left"></i> <?php echo $lang['continue_shopping'] ?? 'Continue Shopping'; ?>
+                        </a>
+                    <?php else: ?>
+                        <form method="POST">
+                            <label for="name"><?php echo $lang['name'] ?? 'Name'; ?>:</label>
+                            <input type="text" id="name" name="name" value="<?php echo htmlspecialchars($user['fullname']); ?>" required>
+                            <label for="address"><?php echo $lang['address'] ?? 'Address'; ?>:</label>
+                            <textarea id="address" name="address" required></textarea>
+                            <label for="phone"><?php echo $lang['phone'] ?? 'Phone'; ?>:</label>
+                            <input type="tel" id="phone" name="phone" value="<?php echo htmlspecialchars($user['fullname']); ?>" required>
+                            <button type="submit">
+                                <i class="fas fa-check"></i> <?php echo $lang['place_order'] ?? 'Place Order'; ?>
+                            </button>
+                        </form>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
         </div>
     </div>
 
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script>
-        AOS.init();
-    </script>
+ <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+    AOS.init();
+
+    // تابع برای گرفتن تعداد آیتم‌های سبد خرید
+    function fetchCartCount() {
+        fetch('get_cart_count.php')
+        .then(response => response.json())
+        .then(data => {
+            const cartCountElement = document.querySelector('.cart-count');
+            if (data.count > 0) {
+                if (cartCountElement) {
+                    cartCountElement.textContent = data.count;
+                } else {
+                    const cartLink = document.querySelector('a[href="cart.php"]');
+                    cartLink.innerHTML += `<span class="cart-count">${data.count}</span>`;
+                }
+            } else if (cartCountElement) {
+                cartCountElement.remove();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    // بارگذاری اولیه تعداد آیتم‌ها
+    fetchCartCount();
+</script>
 </body>
 </html>

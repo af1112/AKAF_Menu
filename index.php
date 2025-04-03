@@ -36,8 +36,8 @@ $categories = $conn->query("SELECT * FROM categories");
 // Calculate cart item count
 $cart_items = $_SESSION['cart'] ?? [];
 $cart_count = 0;
-foreach ($cart_items as $quantity) {
-    $cart_count += $quantity;
+foreach ($cart_items as $item) {
+    $cart_count += $item['quantity'];
 }
 
 // Fetch footer info
@@ -87,16 +87,16 @@ $hero_description = $hero_texts['description_' . $_SESSION['lang']] ?? ($lang['w
 		<div class="container-fluid">
 			<div class="language-switcher">
 				<a class="lang-link <?php echo $_SESSION['lang'] == 'en' ? 'active' : ''; ?>" href="index.php?lang=en">
-					<img src="https://flagcdn.com/20x15/gb.png" alt="English" class="flag-icon"> EN
+					<img src="images/flags/en.png" alt="English" class="flag-icon"> EN
 				</a>
 				<a class="lang-link <?php echo $_SESSION['lang'] == 'fa' ? 'active' : ''; ?>" href="index.php?lang=fa">
-					<img src="https://flagcdn.com/20x15/ir.png" alt="Persian" class="flag-icon"> FA
+					<img src="images/flags/fa.png" alt="Persian" class="flag-icon"> FA
 				</a>
 				<a class="lang-link <?php echo $_SESSION['lang'] == 'ar' ? 'active' : ''; ?>" href="index.php?lang=ar">
-					<img src="https://flagcdn.com/20x15/sa.png" alt="Arabic" class="flag-icon"> AR
+					<img src="images/flags/ar.png" alt="Arabic" class="flag-icon"> AR
 				</a>
 				<a class="lang-link <?php echo $_SESSION['lang'] == 'fr' ? 'active' : ''; ?>" href="index.php?lang=fr">
-					<img src="https://flagcdn.com/20x15/fr.png" alt="French" class="flag-icon"> FR
+					<img src="images/flags/fr.png" alt="French" class="flag-icon"> FR
 				</a>
 			</div>
 		</div>

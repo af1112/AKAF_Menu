@@ -204,14 +204,14 @@ body {
 /* Header Styles (for pages without navbar) */
 .header {
     background-color: #2c3e50;
-    padding: 10px 10px;
+    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     color: white;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     position: fixed;
-    top: 30px;
+    top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
@@ -877,6 +877,7 @@ body {
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 20px;
+	table-layout: auto; /* عرض ستون‌ها بر اساس محتوا تنظیم بشه */
 }
 .item-name {
     width: 50%; /* بیشترین فضا رو به نام بده (نسبت به بقیه ستون‌ها) */
@@ -912,12 +913,7 @@ body {
 .cart-table th:nth-child(5), .cart-table td:nth-child(5) { /* ستون عملیات */
     width: 5%;
 }
-.cart-table th:nth-child(6), .cart-table td:nth-child(6) { /* ستون عملیات */
-    width: 5%;
-}
-.cart-table th:nth-child(7), .cart-table td:nth-child(7) { /* ستون عملیات */
-    width: 5%;
-}
+
 /* ریسپانسیو کردن برای موبایل */
 @media (max-width: 768px) {
     .item-name {
@@ -926,11 +922,7 @@ body {
     }
     .cart-table th:nth-child(2), .cart-table td:nth-child(2),
     .cart-table th:nth-child(3), .cart-table td:nth-child(3),
-    .cart-table th:nth-child(4), .cart-table td:nth-child(4),
-    .cart-table th:nth-child(4), .cart-table td:nth-child(5),
-    .cart-table th:nth-child(4), .cart-table td:nth-child(6),
-    .cart-table th:nth-child(4), .cart-table td:nth-child(7),
- {
+    .cart-table th:nth-child(4), .cart-table td:nth-child(4) {
         width: auto; /* بقیه ستون‌ها هم در موبایل تنظیم بشن */
     }
 }
