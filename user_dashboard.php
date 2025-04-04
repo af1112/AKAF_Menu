@@ -50,10 +50,13 @@ $stmt->execute();
 $orders = $stmt->get_result();
 
 // Calculate cart item count
-$cart_items = $_SESSION['cart'] ?? [];
+$cart_items = is_array($_SESSION['cart'] ?? []) ? $_SESSION['cart']: [];
 $cart_count = 0;
-foreach ($cart_items as $quantity) {
+foreach ($cart_items as $quantity)
+{
+	if(is_numeric($quantity)){
     $cart_count += $quantity;
+	}
 }
 
 // Update user profile

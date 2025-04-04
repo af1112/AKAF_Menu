@@ -203,6 +203,7 @@ foreach ($cart_items as $item) {
     </nav>
     <div class="container">
         <!-- جزئیات غذا -->
+		
         <div class="food-details" data-aos="fade-up">
             <div class="main-info">
                 <img src="<?php echo htmlspecialchars($food['main_image'] ?? 'images/default.jpg'); ?>" alt="<?php echo htmlspecialchars($food[$lang_name_col]); ?>" class="main-image">
@@ -242,6 +243,7 @@ foreach ($cart_items as $item) {
                 </div>
             <?php endif; ?>
         </div>
+		
 
         <!-- نظرات -->
         <div class="reviews" data-aos="fade-up">

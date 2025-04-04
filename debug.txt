@@ -12,3 +12,7 @@ Received food_id: 5, quantity: 1
 Inserted into cart: user_id=3, food_id=5, quantity=1
 Received food_id: 3, quantity: 1
 Inserted into cart: user_id=3, food_id=3, quantity=1
+Received food_id: 3, quantity: 1
+Updated cart: user_id=3, food_id=3, new_quantity=3
+Received food_id: 5, quantity: 1
+Inserted into cart: user_id=3, food_id=5, quantity=1

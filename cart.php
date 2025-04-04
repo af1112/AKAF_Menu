@@ -306,7 +306,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
 						<form action="cart.php" method="POST">
 							<input type="hidden" name="checkout" value="2">
 							<button type="submit" class="continue-shopping">
+							<a href="menu.php" class="continue-shopping">
 								<i class="fas fa-arrow-left"></i> <?php echo $lang['continue_shopping'] ?? 'Continue Shopping'; ?>
+								</a>
 							</button>
 							<input type="hidden" name="checkout" value="1">
 							<button type="submit" class="checkout-btn">

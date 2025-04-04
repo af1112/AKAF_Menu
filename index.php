@@ -148,7 +148,7 @@ $hero_description = $hero_texts['description_' . $_SESSION['lang']] ?? ($lang['w
                     </li>
                     <?php if ($is_logged_in && !$is_rtl): ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="profile.php">
+                            <a class="nav-link" href="user_dashboard.php">
                                 <i class="fas fa-user"></i> <?php echo $lang['profile'] ?? 'Profile'; ?>
                             </a>
                         </li>
