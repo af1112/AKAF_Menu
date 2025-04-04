@@ -1,6 +1,7 @@
 ﻿<?php
 $lang = [
     'menu' => 'Menu',
+    'welcome' => 'Welcome',
     'cart' => 'Cart',
 	'checkout' => 'Checkout',
 	'shipping_info' => 'Shipping Information',
@@ -174,6 +175,9 @@ $lang = [
 	'Special_Request' => 'Special Request',
 	'total' => 'Total',
 	'VAT' => 'VAT',
-	'grand_total' => 'Grand Total'
+	'grand_total' => 'Grand Total',
+	'home' => 'Home',
+	'search' => 'Search',
+	'favourite' => 'Favourite'
 ];
 ?>

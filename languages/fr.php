@@ -1,6 +1,7 @@
 ﻿<?php
 $lang = [
     'menu' => 'Menu',
+    'welcome' => 'Bienvenue',
     'cart' => 'Panier',
 	'checkout' => 'vérifier',
 	'shipping_info' => "Informations d'expédition",
@@ -164,6 +165,8 @@ $lang = [
 	'total' => 'Total',
 	'VAT' => 'IMPÔT',
 	'grand_total' => 'Grand Total',
-	'home' => 'Maison'
+	'home' => 'Maison',
+	'search' => 'recherche',
+	'favourite' => "préférée"
 ];
 ?>
