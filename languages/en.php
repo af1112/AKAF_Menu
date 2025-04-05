@@ -178,6 +178,15 @@ $lang = [
 	'grand_total' => 'Grand Total',
 	'home' => 'Home',
 	'search' => 'Search',
-	'favourite' => 'Favourite'
+	'favourite' => 'Favourite',
+	'order_history' =>'Order History',
+	'complete_order' =>' Complete order',
+	'your_order' =>'Your Order',
+	'order_type' =>'Order Type',
+	'select_type' =>'Select type',
+	'payment_method' =>'Payment method',
+	'pay_online' =>'Pay Online',
+	'cash' =>'Cash',
+	'place_order' =>'Place Order'
 ];
 ?>

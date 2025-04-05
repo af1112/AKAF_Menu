@@ -36,8 +36,10 @@ if (isset($_GET['theme'])) {
 $theme = $_SESSION['theme'];
 
 // Check if user is logged in
+// Check if user is logged in
 $is_logged_in = isset($_SESSION['user']) && is_array($_SESSION['user']) && isset($_SESSION['user']['id']);
 $user_id = $is_logged_in ? $_SESSION['user']['id'] : null;
+$username = $is_logged_in ? $_SESSION['user']['username'] : null;
 
 if (!$is_logged_in) {
     header("Location: user_login.php");
@@ -78,6 +80,15 @@ if (!$order) {
 $total_price = $order['total_price'] ?? 0;
 $vat_amount = $order['vat_amount'] ?? 0;
 $grand_total = $order['grand_total'] ?? 0;
+// Determine greeting based on time of day
+$hour = (int)date('H'); // ساعت فعلی (0-23)
+if ($hour >= 5 && $hour < 12) {
+    $greeting = $lang['good_morning'] ?? 'Good Morning';
+} elseif ($hour >= 12 && $hour < 17) {
+    $greeting = $lang['good_afternoon'] ?? 'Good Afternoon';
+} else {
+    $greeting = $lang['good_evening'] ?? 'Good Evening';
+}
 
 // دریافت آیتم‌های سفارش
 $stmt_items = $conn->prepare("SELECT oi.quantity, oi.price, oi.comment, f.name_" . $_SESSION['lang'] . " AS name FROM order_items oi JOIN foods f ON oi.food_id = f.id WHERE oi.order_id = ?");
@@ -102,11 +113,86 @@ $cart_count = 0; // No need to calculate this here as cart should be empty
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- AOS for animations -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="style.css?v=<?php echo time(); ?>"> <!-- اضافه کردن نسخه برای جلوگیری از کش -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .desktop-menu a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 16px;
+        }
+
+        /* ✅ استایل منوی پایین برای موبایل */
+        .menu-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #ffffff;
+            display: none;
+            justify-content: space-around;
+            padding: 5px 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+			z-index: 1000; /* ⬅ مقدار زیاد که منو همیشه روی همه چیز باشد */
+        }
+
+        .menu-bar a {
+            text-decoration: none;
+            color: #666;
+            font-size: 10px;
+            text-align: center;
+            flex: 1;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .menu-bar a i {
+            font-size: 22px;
+            display: block;
+            margin-bottom: 0px;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: 0;
+            right: 15px;
+            background: red;
+            color: white;
+            font-size: 10px;
+            width: 16px;
+            height: 16px;
+            line-height: 18px;
+            text-align: center;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ✅ نمایش منوی پایین در موبایل و تبلت */
+        @media (max-width: 1000px) {
+            .desktop-menu {
+                display: none;
+            }
+
+            .menu-bar {
+                display: flex;
+            }
+        }
+        @media (max-width: 500px) {
+		.navbar {
+				display: none;
+			}
+		}
+    </style>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const radios = document.querySelectorAll('input[name="delivery_type"]');
@@ -153,9 +239,13 @@ $cart_count = 0; // No need to calculate this here as cart should be empty
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg custom-navbar">
         <div class="container-fluid">
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <span class="navbar-brand">
+				<?php if ($is_logged_in): ?>
+                <?php echo "$greeting, $username!"; ?>
+				<?php else: ?>
+                <?php echo $lang['welcome'] ?? 'Welcome'; ?>
+				<?php endif; ?>
+			</span>
             <div class="collapse navbar-collapse <?php echo $is_rtl ? '' : 'justify-content-end'; ?>" id="navbarNav">
                 <ul class="navbar-nav <?php echo $is_rtl ? 'nav-rtl' : ''; ?>">
                     <?php if ($is_rtl): ?>
@@ -174,7 +264,7 @@ $cart_count = 0; // No need to calculate this here as cart should be empty
                     <?php endif; ?>
                     <!-- Middle items -->
                     <li class="nav-item">
-                        <a class="nav-link" href="checkout.php?theme=<?php echo $theme === 'light' ? 'dark' : 'light'; ?>">
+                        <a class="nav-link" href="index.php?theme=<?php echo $theme === 'light' ? 'dark' : 'light'; ?>">
                             <i class="fas <?php echo $theme === 'light' ? 'fa-moon' : 'fa-sun'; ?>"></i>
                             <?php echo $theme === 'light' ? ($lang['dark_mode'] ?? 'Dark Mode') : ($lang['light_mode'] ?? 'Light Mode'); ?>
                         </a>
@@ -198,7 +288,7 @@ $cart_count = 0; // No need to calculate this here as cart should be empty
                         <!-- RTL: Profile in the middle -->
                         <?php if ($is_logged_in): ?>
                             <li class="nav-item">
-                                <a class="nav-link" href="user_dashboard.php">
+                                <a class="nav-link" href="profile.php">
                                     <i class="fas fa-user"></i> <?php echo $lang['profile'] ?? 'Profile'; ?>
                                 </a>
                             </li>
@@ -221,7 +311,30 @@ $cart_count = 0; // No need to calculate this here as cart should be empty
             </div>
         </div>
     </nav>
-
+<!-- ✅ منوی پایین مخصوص موبایل -->
+    <div class="menu-bar" id="menu">
+        <a href="index.php" class="active">
+            <i class="fa-solid fa-house"></i>
+            <span class="menu-text"><?php echo $lang['home'] ?? 'Home'; ?></span>
+        </a>
+        <a href="search.php">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span class="menu-text"><?php echo $lang['search'] ?? 'Search'; ?></span>
+        </a>
+        <a href="cart.php" class="shopping-cart">
+            <i class="fa-solid fa-shopping-cart"></i>
+            <span class="menu-text"><?php echo $lang['shopping_cart'] ?? 'Shopping Cart'; ?></span>
+            <span class="cart-badge" id="cart-count">2</span>
+        </a>
+        <a href="favourite.php">
+            <i class="fa-solid fa-heart"></i>
+            <span class="menu-text"><?php echo $lang['favourite'] ?? 'Favourite'; ?></span>
+        </a>
+        <a href="menu.php">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+            <span class="menu-text"><?php echo $lang['menu'] ?? 'Menu'; ?></span>
+        </a>
+    </div>
     <div class="container">
         <!-- پرداخت -->
         <div class="checkout" data-aos="fade-up">

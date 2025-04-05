@@ -9,7 +9,15 @@ if (!isset($_SESSION['user']) || !is_array($_SESSION['user']) || !isset($_SESSIO
 }
 
 $user_id = $_SESSION['user']['id'];
-
+// Determine greeting based on time of day
+$hour = (int)date('H'); // ساعت فعلی (0-23)
+if ($hour >= 5 && $hour < 12) {
+    $greeting = $lang['good_morning'] ?? 'Good Morning';
+} elseif ($hour >= 12 && $hour < 17) {
+    $greeting = $lang['good_afternoon'] ?? 'Good Afternoon';
+} else {
+    $greeting = $lang['good_evening'] ?? 'Good Evening';
+}
 // Load language
 if (!isset($_SESSION['lang'])) {
     $_SESSION['lang'] = 'en';
@@ -34,10 +42,109 @@ if ($cart_result->num_rows == 0) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $lang['complete_order']; ?></title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>"> <!-- اضافه کردن نسخه برای جلوگیری از کش -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .desktop-menu a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 16px;
+        }
+
+        /* ✅ استایل منوی پایین برای موبایل */
+        .menu-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #ffffff;
+            display: none;
+            justify-content: space-around;
+            padding: 5px 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+			z-index: 1000; /* ⬅ مقدار زیاد که منو همیشه روی همه چیز باشد */
+        }
+
+        .menu-bar a {
+            text-decoration: none;
+            color: #666;
+            font-size: 10px;
+            text-align: center;
+            flex: 1;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .menu-bar a i {
+            font-size: 22px;
+            display: block;
+            margin-bottom: 0px;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: 0;
+            right: 15px;
+            background: red;
+            color: white;
+            font-size: 10px;
+            width: 16px;
+            height: 16px;
+            line-height: 18px;
+            text-align: center;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ✅ نمایش منوی پایین در موبایل و تبلت */
+        @media (max-width: 1000px) {
+            .desktop-menu {
+                display: none;
+            }
+
+            .menu-bar {
+                display: flex;
+            }
+        }
+        @media (max-width: 500px) {
+		.navbar {
+				display: none;
+			}
+		}
+    </style>
 </head>
 <body>
     <h1>🍽️ <?php echo $lang['complete_order']; ?></h1>
+	<!-- ✅ منوی پایین مخصوص موبایل -->
+    <div class="menu-bar" id="menu">
+        <a href="index.php" class="active">
+            <i class="fa-solid fa-house"></i>
+            <span class="menu-text"><?php echo $lang['home'] ?? 'Home'; ?></span>
+        </a>
+        <a href="search.php">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span class="menu-text"><?php echo $lang['search'] ?? 'Search'; ?></span>
+        </a>
+        <a href="cart.php" class="shopping-cart">
+            <i class="fa-solid fa-shopping-cart"></i>
+            <span class="menu-text"><?php echo $lang['shopping_cart'] ?? 'Shopping Cart'; ?></span>
+            <span class="cart-badge" id="cart-count">2</span>
+        </a>
+        <a href="favourite.php">
+            <i class="fa-solid fa-heart"></i>
+            <span class="menu-text"><?php echo $lang['favourite'] ?? 'Favourite'; ?></span>
+        </a>
+        <a href="menu.php">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+            <span class="menu-text"><?php echo $lang['menu'] ?? 'Menu'; ?></span>
+        </a>
+    </div>
 
     <div class="form-container">
         <form id="orderForm" action="process_order.php" method="POST">

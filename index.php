@@ -329,47 +329,7 @@ $hero_description = $hero_texts['description_' . $_SESSION['lang']] ?? ($lang['w
             </div>
         </div>
     </footer>
-    <script>
-        function changeLanguage() {
-            const langSelect = document.getElementById("lang").value;
-            document.documentElement.lang = langSelect;
 
-            // تنظیم چپ‌چین و راست‌چین بر اساس زبان
-            if (langSelect === "fa" || langSelect === "ar") {
-                document.documentElement.dir = "rtl";
-            } else {
-                document.documentElement.dir = "ltr";
-            }
-
-            // ترجمه منوی پایین موبایل
-            const mobileTranslations = {
-                fa: ["خانه", "جستجو", "سبد خرید", "علاقه‌مندی‌ها", "منو"],
-                ar: ["الرئيسية", "بحث", "سلة المشتريات", "المفضلة", "القائمة"],
-                en: ["Home", "Search", "Cart", "Favorites", "Menu"],
-                fr: ["Accueil", "Recherche", "Panier", "Favoris", "Menu"]
-            };
-
-            // ترجمه منوی دسکتاپ
-            const desktopTranslations = {
-                fa: ["خانه", "منو", "سفارش آنلاین", "تماس با ما"],
-                ar: ["الرئيسية", "القائمة", "طلب عبر الإنترنت", "اتصل بنا"],
-                en: ["Home", "Menu", "Order Online", "Contact Us"],
-                fr: ["Accueil", "Menu", "Commander en ligne", "Contactez-nous"]
-            };
-
-            // تغییر متن منوی موبایل
-            const menuTexts = document.querySelectorAll(".menu-text");
-            menuTexts.forEach((item, index) => {
-                item.textContent = mobileTranslations[langSelect][index];
-            });
-
-            // تغییر متن منوی دسکتاپ
-            const desktopTexts = document.querySelectorAll(".desktop-menu-text");
-            desktopTexts.forEach((item, index) => {
-                item.textContent = desktopTranslations[langSelect][index];
-            });
-        }
-    </script>
     <!-- Bootstrap JS and Popper.js -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>

@@ -39,6 +39,7 @@ include "languages/" . $_SESSION['lang'] . ".php";
 // Check if user is logged in
 $is_logged_in = isset($_SESSION['user']) && is_array($_SESSION['user']) && isset($_SESSION['user']['id']);
 $user_id = $is_logged_in ? $_SESSION['user']['id'] : null;
+$username = $is_logged_in ? $_SESSION['user']['username'] : null;
 
 
 // Detect language direction
@@ -69,6 +70,15 @@ if (isset($_SESSION['user']) && is_array($_SESSION['user']) && isset($_SESSION['
 			}
 } else {
     file_put_contents('debug.txt', "User ID not set\n", FILE_APPEND);
+}
+// Determine greeting based on time of day
+$hour = (int)date('H'); // ساعت فعلی (0-23)
+if ($hour >= 5 && $hour < 12) {
+    $greeting = $lang['good_morning'] ?? 'Good Morning';
+} elseif ($hour >= 12 && $hour < 17) {
+    $greeting = $lang['good_afternoon'] ?? 'Good Afternoon';
+} else {
+    $greeting = $lang['good_evening'] ?? 'Good Evening';
 }
 // Calculate cart item count
 $cart_items = $_SESSION['cart'] ?? [];
@@ -167,12 +177,90 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <!-- AOS for animations -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>"> <!-- اضافه کردن نسخه برای جلوگیری از کش -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .desktop-menu a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 16px;
+        }
+
+        /* ✅ استایل منوی پایین برای موبایل */
+        .menu-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #ffffff;
+            display: none;
+            justify-content: space-around;
+            padding: 5px 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+			z-index: 1000; /* ⬅ مقدار زیاد که منو همیشه روی همه چیز باشد */
+        }
+
+        .menu-bar a {
+            text-decoration: none;
+            color: #666;
+            font-size: 10px;
+            text-align: center;
+            flex: 1;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .menu-bar a i {
+            font-size: 22px;
+            display: block;
+            margin-bottom: 0px;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: 0;
+            right: 15px;
+            background: red;
+            color: white;
+            font-size: 10px;
+            width: 16px;
+            height: 16px;
+            line-height: 18px;
+            text-align: center;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ✅ نمایش منوی پایین در موبایل و تبلت */
+        @media (max-width: 1000px) {
+            .desktop-menu {
+                display: none;
+            }
+
+            .menu-bar {
+                display: flex;
+            }
+        }
+        @media (max-width: 500px) {
+		.navbar {
+				display: none;
+			}
+		}
+    </style>
 </head>
+
+
+
 <body class="<?php echo $theme; ?>">
     <!-- هدر -->
 		<!-- Language Bar -->
@@ -197,9 +285,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg custom-navbar">
         <div class="container-fluid">
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <span class="navbar-brand">
+				<?php if ($is_logged_in): ?>
+                <?php echo "$greeting, $username!"; ?>
+				<?php else: ?>
+                <?php echo $lang['welcome'] ?? 'Welcome'; ?>
+				<?php endif; ?>
+			</span>
             <div class="collapse navbar-collapse <?php echo $is_rtl ? '' : 'justify-content-end'; ?>" id="navbarNav">
                 <ul class="navbar-nav <?php echo $is_rtl ? 'nav-rtl' : ''; ?>">
                     <?php if ($is_rtl): ?>
@@ -218,7 +310,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
                     <?php endif; ?>
                     <!-- Middle items -->
                     <li class="nav-item">
-                        <a class="nav-link" href="checkout.php?theme=<?php echo $theme === 'light' ? 'dark' : 'light'; ?>">
+                        <a class="nav-link" href="index.php?theme=<?php echo $theme === 'light' ? 'dark' : 'light'; ?>">
                             <i class="fas <?php echo $theme === 'light' ? 'fa-moon' : 'fa-sun'; ?>"></i>
                             <?php echo $theme === 'light' ? ($lang['dark_mode'] ?? 'Dark Mode') : ($lang['light_mode'] ?? 'Light Mode'); ?>
                         </a>
@@ -242,7 +334,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
                         <!-- RTL: Profile in the middle -->
                         <?php if ($is_logged_in): ?>
                             <li class="nav-item">
-                                <a class="nav-link" href="user_dashboard.php">
+                                <a class="nav-link" href="profile.php">
                                     <i class="fas fa-user"></i> <?php echo $lang['profile'] ?? 'Profile'; ?>
                                 </a>
                             </li>
@@ -265,6 +357,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
             </div>
         </div>
     </nav>
+	<!-- ✅ منوی پایین مخصوص موبایل -->
+    <div class="menu-bar" id="menu">
+        <a href="index.php" class="active">
+            <i class="fa-solid fa-house"></i>
+            <span class="menu-text"><?php echo $lang['home'] ?? 'Home'; ?></span>
+        </a>
+        <a href="search.php">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <span class="menu-text"><?php echo $lang['search'] ?? 'Search'; ?></span>
+        </a>
+        <a href="cart.php" class="shopping-cart">
+            <i class="fa-solid fa-shopping-cart"></i>
+            <span class="menu-text"><?php echo $lang['shopping_cart'] ?? 'Shopping Cart'; ?></span>
+            <span class="cart-badge" id="cart-count">2</span>
+        </a>
+        <a href="favourite.php">
+            <i class="fa-solid fa-heart"></i>
+            <span class="menu-text"><?php echo $lang['favourite'] ?? 'Favourite'; ?></span>
+        </a>
+        <a href="menu.php">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+            <span class="menu-text"><?php echo $lang['menu'] ?? 'Menu'; ?></span>
+        </a>
+    </div>
     <div class="container">
         <!-- سبد خرید -->
         <div class="cart" data-aos="fade-up">
@@ -325,6 +441,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['checkout'])) {
             <?php endif; ?>
         </div>
     </div>
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>

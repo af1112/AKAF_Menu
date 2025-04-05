@@ -67,23 +67,50 @@
         <h2><i class="fas fa-user-plus"></i> Create an Account</h2>
         <form action="process_register.php" method="POST">
             <div class="mb-3">
-                <input type="text" name="username" class="form-control" placeholder="Username" required>
+			    <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                <input type="text" name="username" class="form-control" required>
             </div>
             <div class="mb-3">
-                <input type="text" name="name" class="form-control" placeholder="Full Name" required>
+			    <label for="full_name" class="form-label">Full Name</label> 
+                <input type="text" name="name" class="form-control">
             </div>
             <div class="mb-3">
-                <input type="email" name="email" class="form-control" placeholder="Email" required>
+			       <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                <input type="email" name="email" class="form-control" required>
             </div>
             <div class="mb-3">
-                <input type="password" name="password" class="form-control" placeholder="Password" required>
+			       <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                <input type="password" name="password" class="form-control" required>
             </div>
-            <div class="mb-3">
-                <input type="text" name="phone" class="form-control" placeholder="Phone Number" required>
+            
+			<?php 
+			$jsonData = file_get_contents('data/countries.json');
+			$countries = json_decode($jsonData, true);
+			function getFlagEmoji($countryCode) {
+				$codePoints = explode(' ',mb_convert_encoding('&#' . (127397 + ord($countryCode[0])) . ';&#' . (127397 + ord($countryCode[1])) . ';', 'UTF-8', 'HTML-Entities'));
+				return implode('', $codePoints);
+			}
+			?>
+			<form method="POST">
+			<div class="mb-3">
+			    <label for="phone" class="form-label">Phone Number</label>
+				<div class="input-group">
+				    <select class="form-select" name="country-code" >
+					<?php
+					foreach ($countries as $code => $country) {
+						$dialCode = isset($country['dial_code']) ? $country['dial_code'] : '';
+						$flagEmoji = get flagEmoji($code);
+						echo "<option value=\"$dialCode\">$flagEmoji $dialCode ({$country['name']})</option>";
+					}
+					?>
+					</Select>
+                <input type="tel" name="phone" class="form-control" placeholder="Enter your Phone number">
             </div>
             <div class="mb-3">
                 <input type="text" id="datepicker" name="dob" class="form-control" placeholder="Date of Birth" required>
             </div>
+			</div>
+			<button type="submit" class="btn btn-primary"> SEND </button>
             <div class="mb-3">
                 <select name="language" class="form-control" required>
                     <option value="">Select Default Language</option>
