@@ -1,1 +1,0 @@
-<?phpinclude 'db.php';$new_password = "admin123";  // Change this if needed$hashed_password = password_hash($new_password, PASSWORD_BCRYPT);$conn->query("UPDATE admin_users SET password = '$hashed_password' WHERE username = 'admin'");echo "? Admin password reset successfully!";?>
