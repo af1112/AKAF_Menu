@@ -1,0 +1,5 @@
+function showCountrySelector() {
+    const countries = window.countries;
+    let options = countries.map(country => `<option value="${country.code}">${country.name}</option>`).join('');
+    alert(`<select>${options}</select>`); // یا یک مودال بسازید
+}

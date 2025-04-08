@@ -1,0 +1,173 @@
+
+Received food_id: 5, quantity: 1
+Inserted into cart: user_id=3, food_id=5, quantity=1
+Script started at 2025-04-06 22:11:56
+No order_id found in GET at 2025-04-06 22:24:05
+Script started at 2025-04-06 22:24:05
+Script started at 2025-04-06 22:24:08
+POST REQUEST detected
+POST Data: Array
+(
+    [quantities] => Array
+        (
+            [3] => 7
+            [5] => 1
+        )
+
+    [comments] => Array
+        (
+            [3] => قفغفقغ
+            [5] => 
+        )
+
+    [checkout] => 1
+)
+
+Transaction committed successfully at 2025-04-06 22:24:08
+Redirecting to checkout.php with order_id: 46
+Script started at 2025-04-06 22:24:54
+Script started at 2025-04-06 22:30:48
+Script started at 2025-04-06 22:30:55
+Script started at 2025-04-06 22:30:55
+Script started at 2025-04-07 01:15:21
+User ID not set
+Script started at 2025-04-07 01:15:27
+User ID not set
+Received food_id: 8, quantity: 1
+User not logged in
+Script started at 2025-04-07 01:19:48
+User ID not set
+Script started at 2025-04-07 23:23:35
+User ID not set
+Script started at 2025-04-08 01:19:59
+Script started at 2025-04-08 01:20:04
+POST REQUEST detected
+POST Data: Array
+(
+    [quantities] => Array
+        (
+            [3] => 7
+            [5] => 1
+        )
+
+    [comments] => Array
+        (
+            [3] => قفغفقغ
+            [5] => 
+        )
+
+    [continue] => 1
+)
+
+Transaction committed successfully at 2025-04-08 01:20:04
+Redirecting to checkout.php with order_id: 52
+Script started at 2025-04-09 00:20:59
+Script started at 2025-04-09 00:21:04
+POST REQUEST detected
+POST Data: Array
+(
+    [quantities] => Array
+        (
+            [3] => 7
+            [5] => 1
+        )
+
+    [comments] => Array
+        (
+            [3] => قفغفقغ
+            [5] => 
+        )
+
+    [continue] => 1
+)
+
+Transaction committed successfully at 2025-04-09 00:21:04
+Redirecting to checkout.php with order_id: 53
+Script started at 2025-04-09 00:21:07
+Script started at 2025-04-09 00:21:13
+POST REQUEST detected
+POST Data: Array
+(
+    [quantities] => Array
+        (
+            [3] => 7
+            [5] => 1
+        )
+
+    [comments] => Array
+        (
+            [3] => قفغفقغ
+            [5] => eefe
+        )
+
+    [continue] => 1
+)
+
+Transaction committed successfully at 2025-04-09 00:21:13
+Redirecting to checkout.php with order_id: 54
+Script started at 2025-04-09 00:21:19
+Script started at 2025-04-09 00:28:18
+Script started at 2025-04-09 00:28:20
+POST REQUEST detected
+POST Data: Array
+(
+    [quantities] => Array
+        (
+            [3] => 7
+            [5] => 1
+        )
+
+    [comments] => Array
+        (
+            [3] => قفغفقغ
+            [5] => eefe
+        )
+
+    [continue] => 1
+)
+
+Script started at 2025-04-09 00:28:23
+Script started at 2025-04-09 00:28:27
+POST REQUEST detected
+POST Data: Array
+(
+    [quantities] => Array
+        (
+            [3] => 7
+            [5] => 1
+        )
+
+    [comments] => Array
+        (
+            [3] => قفغفقغ
+            [5] => eefe
+        )
+
+    [checkout] => 1
+)
+
+Transaction committed successfully at 2025-04-09 00:28:27
+Redirecting to checkout.php with order_id: 55
+Script started at 2025-04-09 00:28:41
+Script started at 2025-04-09 00:28:49
+POST REQUEST detected
+POST Data: Array
+(
+    [quantities] => Array
+        (
+            [3] => 7
+            [5] => 1
+        )
+
+    [comments] => Array
+        (
+            [3] => قفغفقغ
+            [5] => eefe
+        )
+
+    [checkout] => 1
+)
+
+Transaction committed successfully at 2025-04-09 00:28:49
+Redirecting to checkout.php with order_id: 56
+Script started at 2025-04-09 00:34:45

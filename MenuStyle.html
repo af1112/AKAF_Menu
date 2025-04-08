@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منوی رستورانی چندزبانه</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        /* ✅ استایل منوی اصلی برای لپ‌تاپ */
+        .desktop-menu {
+            display: flex;
+            justify-content: center;
+            background: #333;
+            color: white;
+            padding: 15px;
+        }
+
+        .desktop-menu a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 16px;
+        }
+
+        /* ✅ استایل منوی پایین برای موبایل */
+        .menu-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #ffffff;
+            display: none; /* مخفی در حالت دسکتاپ */
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .menu-bar a {
+            text-decoration: none;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+            flex: 1;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .menu-bar a i {
+            font-size: 22px;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .menu-bar a.active {
+            color: #FF5722;
+        }
+
+        .menu-bar a:hover {
+            color: #E64A19;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: 0;
+            right: 15px;
+            background: red;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            width: 18px;
+            height: 18px;
+            line-height: 18px;
+            text-align: center;
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ✅ نمایش منوی پایین در موبایل و تبلت */
+        @media (max-width: 768px) {
+            .desktop-menu {
+                display: none; /* پنهان کردن منوی اصلی */
+            }
+
+            .menu-bar {
+                display: flex; /* نمایش منوی پایین */
+            }
+        }
+    </style>
+
+    <!-- لینک Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+
+    <!-- ✅ منوی اصلی مخصوص دسکتاپ -->
+    <nav class="desktop-menu">
+        <a href="#">خانه</a>
+        <a href="#">منو</a>
+        <a href="#">سفارش آنلاین</a>
+        <a href="#">تماس با ما</a>
+    </nav>
+
+    <!-- ✅ منوی پایین مخصوص موبایل -->
+    <div class="menu-bar">
+        <a href="#" class="active">
+            <i class="fa-solid fa-house"></i>
+            خانه
+        </a>
+        <a href="#">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            جستجو
+        </a>
+        <a href="#" class="shopping-cart">
+            <i class="fa-solid fa-shopping-cart"></i>
+            سبد خرید
+            <span class="cart-badge" id="cart-count">2</span>
+        </a>
+        <a href="#">
+            <i class="fa-solid fa-heart"></i>
+            علاقه‌مندی‌ها
+        </a>
+        <a href="#">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+            منو
+        </a>
+    </div>
+
+</body>
+</html>
