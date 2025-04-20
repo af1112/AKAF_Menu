@@ -35,7 +35,6 @@ if (isset($_GET['lang'])) {
     $_SESSION['lang'] = $_GET['lang'];
 }
 include "languages/" . $_SESSION['lang'] . ".php";
-file_put_contents('debug.txt', "Loaded lang: " . print_r($lang, true) . "\n", FILE_APPEND);
 
 // Check if user is logged in
 $is_logged_in = isset($_SESSION['user']) && is_array($_SESSION['user']) && isset($_SESSION['user']['id']);
@@ -131,7 +130,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['call_waiter'])) {
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>"> <!-- اضافه کردن نسخه برای جلوگیری از کش -->
-
     <style>
         * {
             margin: 0;
@@ -213,18 +211,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['call_waiter'])) {
     <div class="language-bar">
         <div class="container-fluid">
             <div class="language-switcher <?php echo $is_rtl ? 'text-start' : 'text-end'; ?>">
-			<a class="lang-link <?php echo $_SESSION['lang'] == 'en' ? 'active' : ''; ?>" href="order_detail.php?order_id=<?php echo $order_id; ?>&lang=en&v=<?php echo time(); ?>">
-				<img src="images/flags/en.png" alt="English" class="flag-icon"> EN
-			</a>
-			<a class="lang-link <?php echo $_SESSION['lang'] == 'fa' ? 'active' : ''; ?>" href="order_detail.php?order_id=<?php echo $order_id; ?>&lang=fa&v=<?php echo time(); ?>">
-				<img src="images/flags/fa.png" alt="Persian" class="flag-icon"> FA
-			</a>
-			<a class="lang-link <?php echo $_SESSION['lang'] == 'ar' ? 'active' : ''; ?>" href="order_detail.php?order_id=<?php echo $order_id; ?>&lang=ar&v=<?php echo time(); ?>">
-				<img src="images/flags/ar.png" alt="Arabic" class="flag-icon"> AR
-			</a>
-			<a class="lang-link <?php echo $_SESSION['lang'] == 'fr' ? 'active' : ''; ?>" href="order_detail.php?order_id=<?php echo $order_id; ?>&lang=fr&v=<?php echo time(); ?>">
-				<img src="images/flags/fr.png" alt="French" class="flag-icon"> FR
-			</a>
+                <a class="lang-link <?php echo $_SESSION['lang'] == 'en' ? 'active' : ''; ?>" href="order_detail.php?lang=en">
+                    <img src="images/flags/en.png" alt="English" class="flag-icon"> EN
+                </a>
+                <a class="lang-link <?php echo $_SESSION['lang'] == 'fa' ? 'active' : ''; ?>" href="order_detail.php?lang=fa">
+                    <img src="images/flags/fa.png" alt="Persian" class="flag-icon"> FA
+                </a>
+                <a class="lang-link <?php echo $_SESSION['lang'] == 'ar' ? 'active' : ''; ?>" href="order_detail.php?lang=ar">
+                    <img src="images/flags/ar.png" alt="Arabic" class="flag-icon"> AR
+                </a>
+                <a class="lang-link <?php echo $_SESSION['lang'] == 'fr' ? 'active' : ''; ?>" href="order_detail.php?lang=fr">
+                    <img src="images/flags/fr.png" alt="French" class="flag-icon"> FR
+                </a>
             </div>
         </div>
     </div>
@@ -249,11 +247,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['call_waiter'])) {
                             <?php endif; ?>
                         </li>
                     <?php endif; ?>
-					<li class="nav-item">
-						<a class="nav-link" href="menu.php">
-							<i class="fas fa-bars"></i> <?php echo $lang['home'] ?? 'Home'; ?>
-						</a>
-					</li>
                     <li class="nav-item">
                         <a class="nav-link" href="checkout.php?theme=<?php echo $theme === 'light' ? 'dark' : 'light'; ?>">
                             <i class="fas <?php echo $theme === 'light' ? 'fa-moon' : 'fa-sun'; ?>"></i>
@@ -317,7 +310,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['call_waiter'])) {
             <table class="table">
                 <thead>
                     <tr>
-                        <th><?php echo $lang['items'] ?? 'Items'; ?></th>
+                        <th><?php echo $lang['item'] ?? 'Item'; ?></th>
                         <th><?php echo $lang['quantity'] ?? 'Quantity'; ?></th>
                         <th><?php echo $lang['price'] ?? 'Price'; ?></th>
                         <th><?php echo $lang['subtotal'] ?? 'Subtotal'; ?></th>

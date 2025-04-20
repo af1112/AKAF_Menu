@@ -10,32 +10,47 @@ $stmt = $conn->prepare("SELECT value FROM settings WHERE `key` = 'currency_Decim
 $stmt->execute();
 $currency_Decimal = $stmt->get_result()->fetch_assoc()['value'] ?? '3'; // پیش‌فرض 3 اگه چیزی پیدا نشد
 
-// Manage theme
-if (!isset($_SESSION['theme'])) {
-    $_SESSION['theme'] = 'light'; // Default theme
-}
-if (isset($_GET['theme'])) {
-    $_SESSION['theme'] = $_GET['theme'] === 'dark' ? 'dark' : 'light';
-}
-$theme = $_SESSION['theme'];
-
 // Check if user is logged in
 $is_logged_in = isset($_SESSION['user']) && is_array($_SESSION['user']) && isset($_SESSION['user']['id']);
 $user_id = $is_logged_in ? $_SESSION['user']['id'] : null;
 
-// Load language
-if (!isset($_SESSION['lang'])) {
-    $_SESSION['lang'] = 'en';
+// بررسی ورود کاربر و دریافت تم و زبان پیش‌فرض
+$user_theme = 'light';
+$user_language = 'fa'; // مقدار پیش‌فرض
+if (isset($_SESSION['user']['id'])) {
+    $user_id = $_SESSION['user']['id'];
+    $stmt = $pdo->prepare("SELECT theme, language FROM users WHERE id = ?");
+    $stmt->execute([$user_id]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    $user_theme = $user['theme'] ?? 'light';
+    $user_language = $user['language'] ?? 'fa';
 }
+
+// Load language
+// ابتدا زبان پیش‌فرض کاربر از دیتابیس تنظیم می‌شود
+if (!isset($_SESSION['lang'])) {
+    $_SESSION['lang'] = $user_language;
+}
+// اگر کاربر از نوار زبان تغییر داد، زبان سشن به‌روزرسانی می‌شود
 if (isset($_GET['lang'])) {
     $_SESSION['lang'] = $_GET['lang'];
 }
-include "languages/" . $_SESSION['lang'] . ".php";
+$language_file = "languages/" . $_SESSION['lang'] . ".php";
+if (!file_exists($language_file)) {
+    $language_file = "languages/en.php";
+}
+include $language_file;
 
 // Detect language direction
 $rtl_languages = ['fa', 'ar'];
 $is_rtl = in_array($_SESSION['lang'], $rtl_languages);
 $direction = $is_rtl ? 'rtl' : 'ltr';
+
+// بررسی وضعیت ورود کاربر
+$is_logged_in = isset($_SESSION['user']['id']);
+
+// تعیین کلاس تم برای body
+$theme_class = $user_theme === 'dark' ? 'dark-theme' : 'light-theme';
 
 // Get food ID from URL
 $food_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -122,6 +137,43 @@ foreach ($cart_items as $item) {
             margin: 0 15px;
             font-size: 16px;
         }
+        body {
+            font-family: <?php echo $is_rtl ? "'IRANSans', sans-serif" : "'Roboto', sans-serif"; ?>;
+            transition: all 0.3s ease;
+        }
+        /* تم روشن (پیش‌فرض) */
+        body.light-theme {
+            background-color: #f8f9fa;
+        }
+        body.light-theme .menu-container {
+            background: #fff;
+        }
+        body.light-theme .menu-list .list-group-item {
+            background-color: #f8f9fa;
+        }
+        body.light-theme .menu-header h2 {
+            color: #ff5722;
+        }
+        /* تم تیره */
+        body.dark-theme {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+        body.dark-theme .menu-container {
+            background: #2a2a2a;
+            color: #e0e0e0;
+        }
+        body.dark-theme .menu-list .list-group-item {
+            background-color: #333;
+            color: #e0e0e0;
+        }
+        body.dark-theme .menu-list .list-group-item:hover {
+            background-color: #ff7043;
+            color: #000;
+        }
+        body.dark-theme .menu-header h2 {
+            color: #ff7043;
+        }
 
         /* ✅ استایل منوی پایین برای موبایل */
         .menu-bar {
@@ -185,7 +237,7 @@ foreach ($cart_items as $item) {
 		}
     </style>
 </head>
-<body class="<?php echo $theme; ?>">
+<body class="<?php echo $theme_class; ?>">
 <!-- Language Bar -->
 	<div class="language-bar">
 		<div class="container-fluid">
@@ -228,12 +280,11 @@ foreach ($cart_items as $item) {
                         </li>
                     <?php endif; ?>
                     <!-- Middle items -->
-                    <li class="nav-item">
-                        <a class="nav-link" href="food_details.php?theme=<?php echo $theme === 'light' ? 'dark' : 'light'; ?><?php echo $category_id ? '&category_id=' . $category_id : ''; ?>">
-                            <i class="fas <?php echo $theme === 'light' ? 'fa-moon' : 'fa-sun'; ?>"></i>
-                            <?php echo $theme === 'light' ? ($lang['dark_mode'] ?? 'Dark Mode') : ($lang['light_mode'] ?? 'Light Mode'); ?>
-                        </a>
-                    </li>
+					<li class="nav-item">
+						<a class="nav-link" href="index.php">
+							<i class="fas fa-bars"></i> <?php echo $lang['home'] ?? 'Home'; ?>
+						</a>
+					</li>
                     <li class="nav-item">
                         <a class="nav-link position-relative" href="cart.php">
                             <i class="fas fa-shopping-cart"></i> <?php echo $lang['cart'] ?? 'Cart'; ?>

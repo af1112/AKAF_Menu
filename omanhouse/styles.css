@@ -1,0 +1,45 @@
+@import url('assets/vazirmatn.css');
+
+body {
+    font-family: 'Vazirmatn', sans-serif;
+    direction: rtl;
+    text-align: right;
+    background: #f8f9fa;
+    margin: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h2.title {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.expense-form label {
+    font-weight: bold;
+}
+
+.expense-form input, .expense-form select, .expense-form textarea {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px;
+}
+
+.table {
+    margin-top: 20px;
+}
+
+.btn-danger {
+    font-size: 16px;
+}
+
+.back-btn {
+    margin-bottom: 20px;
+}

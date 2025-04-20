@@ -174,6 +174,11 @@ if (!function_exists('getSortLink')) {
         .foods-table thead th { color: #fff; background-color: #333; }
         .sort-icon { margin-left: 5px; color: #fff; text-decoration: none; font-size: 12px; }
         .sort-icon:hover { color: #ddd; }
+		@media (max-width: 768px) {
+			.admin-sidebar{
+				top : 940px;
+			}
+		}
     </style>
 </head>
 <body class="admin-body <?php echo $theme; ?>">

@@ -859,146 +859,6 @@ body {
     background-color: var(--button-hover-bg);
 }
 
-/* استایل‌های cart.php */
-.cart {
-    background: var(--card-bg);
-    border-radius: 15px;
-    box-shadow: 0 4px 10px var(--shadow-color);
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-.cart h2 {
-    color: var(--card-title);
-    margin: 0 0 20px;
-}
-
-.cart-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-}
-.item-name {
-    width: 50%; /* بیشترین فضا رو به نام بده (نسبت به بقیه ستون‌ها) */
-    max-width: 500px; /* حداکثر عرض در دسکتاپ */
-    min-width: 100px; /* حداقل عرض برای خوانایی */
-    white-space: normal; /* متن به خط بعدی بره اگر جا نباشه */
-    word-wrap: break-word; /* کلمات بلند شکسته بشن */
-}
-.cart-table th, .cart-table td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.cart-table th {
-    background-color: var(--table-header-bg);
-    color: var(--card-title);
-}
-
-.cart-table td {
-    color: var(--card-text);
-}
-/* تنظیمات برای بقیه ستون‌ها (اختیاری) */
-.cart-table th:nth-child(2), .cart-table td:nth-child(2) { /* ستون تعداد */
-    width: 15%;
-}
-.cart-table th:nth-child(3), .cart-table td:nth-child(3) { /* ستون قیمت */
-    width: 15%;
-}
-.cart-table th:nth-child(4), .cart-table td:nth-child(4) { /* ستون مجموع */
-    width: 15%;
-}
-.cart-table th:nth-child(5), .cart-table td:nth-child(5) { /* ستون عملیات */
-    width: 5%;
-}
-.cart-table th:nth-child(6), .cart-table td:nth-child(6) { /* ستون عملیات */
-    width: 5%;
-}
-.cart-table th:nth-child(7), .cart-table td:nth-child(7) { /* ستون عملیات */
-    width: 5%;
-}
-/* ریسپانسیو کردن برای موبایل */
-@media (max-width: 768px) {
-    .item-name {
-        width: auto; /* در موبایل عرض خودکار بشه */
-        max-width: 100%; /* کل عرض رو بگیره اگر لازم باشه */
-    }
-    .cart-table th:nth-child(2), .cart-table td:nth-child(2),
-    .cart-table th:nth-child(3), .cart-table td:nth-child(3),
-    .cart-table th:nth-child(4), .cart-table td:nth-child(4),
-    .cart-table th:nth-child(4), .cart-table td:nth-child(5),
-    .cart-table th:nth-child(4), .cart-table td:nth-child(6),
-    .cart-table th:nth-child(4), .cart-table td:nth-child(7),
- {
-        width: auto; /* بقیه ستون‌ها هم در موبایل تنظیم بشن */
-    }
-}
-.cart-table .item-name {
-    font-weight: bold;
-    color: var(--text-color);
-}
-
-.cart-table .quantity-input {
-    width: 60px;
-    padding: 5px;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    background-color: var(--card-bg);
-    color: var(--text-color);
-}
-
-.cart-table .remove-btn {
-    background-color: var(--error-color);
-    color: var(--button-text);
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.cart-table .remove-btn:hover {
-    background-color: #c82333;
-}
-
-.total {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--text-color);
-    text-align: right;
-}
-
-.checkout-btn {
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: var(--button-bg);
-    color: var(--button-text);
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    text-decoration: none;
-    transition: background-color 0.3s;
-}
-
-.checkout-btn:hover {
-    background-color: var(--button-hover-bg);
-}
-
-.continue-shopping {
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: var(--secondary-button-bg);
-    color: var(--secondary-button-text);
-    border-radius: 5px;
-    text-decoration: none;
-    transition: background-color 0.3s;
-}
-
-.continue-shopping:hover {
-    background-color: var(--secondary-button-hover-bg);
-}
-
 /* استایل‌های checkout.php */
 .checkout {
     background: var(--card-bg);
@@ -1850,3 +1710,40 @@ form button:hover {
             margin: 0 15px;
             font-size: 16px;
         }
+
+.cart-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.cart-table th, .cart-table td {
+    padding: 10px;
+    text-align: right; /* برای RTL */
+    border-bottom: 1px solid var(--border-color);
+}
+
+[dir="rtl"] .cart-table th, [dir="rtl"] .cart-table td {
+    text-align: right;
+}
+
+.cart-table th {
+    background-color: var(--table-header-bg);
+    color: var(--card-title);
+}
+
+.cart-table td {
+    color: var(--card-text);
+}
+.cart-table .delete-btn {
+    background-color: var(--error-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+.cart-table .delete-btn:hover {
+    background-color: #c82333;
+}

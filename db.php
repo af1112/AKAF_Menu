@@ -16,12 +16,12 @@ $conn->set_charset("utf8mb4");
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
-define('DB_HOST', $servername); // هاست نام از هاستینگ
-define('DB_NAME', $dbname); // نام پایگاه داده
-define('DB_USER', $username); // نام کاربری
-define('DB_PASS', $password); // رمز عبور
+//define('DB_HOST', $servername); // هاست نام از هاستینگ
+//define('DB_NAME', $dbname); // نام پایگاه داده
+//define('DB_USER', $username); // نام کاربری
+//define('DB_PASS', $password); // رمز عبور
 try {
-    $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8", DB_USER, DB_PASS);
+    $pdo = new PDO("mysql:host=" . $servername . ";dbname=" . $dbname . ";charset=utf8", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     die("Connection failed: " . $e->getMessage());

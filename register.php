@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,7 +11,6 @@
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-
     <style>
         body {
             background: linear-gradient(to right, #141E30, #243B55);
@@ -19,6 +20,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+			margin-top: 90px;
         }
         .register-box {
             background: rgba(0, 0, 0, 0.8);
@@ -84,7 +86,7 @@
             </div>
             
 			<?php 
-			$jsonData = file_get_contents('data/countries.json');
+			$jsonData = file_get_contents('data/countries.min.json');
 			$countries = json_decode($jsonData, true);
 			function getFlagEmoji($countryCode) {
 				$codePoints = explode(' ',mb_convert_encoding('&#' . (127397 + ord($countryCode[0])) . ';&#' . (127397 + ord($countryCode[1])) . ';', 'UTF-8', 'HTML-Entities'));
@@ -99,7 +101,7 @@
 					<?php
 					foreach ($countries as $code => $country) {
 						$dialCode = isset($country['dial_code']) ? $country['dial_code'] : '';
-						$flagEmoji = get flagEmoji($code);
+						$flagEmoji = getflagEmoji($code);
 						echo "<option value=\"$dialCode\">$flagEmoji $dialCode ({$country['name']})</option>";
 					}
 					?>
