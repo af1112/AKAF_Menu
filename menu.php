@@ -152,7 +152,6 @@ $footer_info = $conn->query("SELECT * FROM footer_info LIMIT 1")->fetch_assoc();
         body.dark-theme .menu-header h2 {
             color: #ff7043;
         }
-
         /* ✅ استایل منوی پایین برای موبایل */
         .menu-bar {
             position: fixed;
@@ -323,7 +322,9 @@ $footer_info = $conn->query("SELECT * FROM footer_info LIMIT 1")->fetch_assoc();
         <a href="cart.php" class="shopping-cart">
             <i class="fa-solid fa-shopping-cart"></i>
             <span class="menu-text"><?php echo $lang['shopping_cart'] ?? 'Shopping Cart'; ?></span>
-            <span class="cart-badge" id="cart-count">2</span>
+			<?php if ($cart_count > 0): ?>
+                <span class="cart-badge"><?php echo $cart_count; ?></span>
+            <?php endif; ?>
         </a>
         <a href="favourite.php">
             <i class="fa-solid fa-heart"></i>
@@ -362,7 +363,9 @@ $footer_info = $conn->query("SELECT * FROM footer_info LIMIT 1")->fetch_assoc();
                     <div class="col" data-aos="fade-up">
                         <div class="card h-100">
 							<a href="food_details.php?id=<?php echo htmlspecialchars($food['id'], ENT_QUOTES, 'UTF-8'); ?>">
-								<img src="<?php echo htmlspecialchars($food['main_image'] ?? 'images/default.jpg'); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($food['name_' . $_SESSION['lang']]); ?>">
+								<div class="card-img-container">
+									<img src="<?php echo htmlspecialchars($food['main_image'] ?? 'images/default.jpg'); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($food['name_' . $_SESSION['lang']]); ?>">
+								</div>
 							</a>						
                             <div class="card-body">
                                 <h5 class="card-title"><?php echo htmlspecialchars($food['name_' . $_SESSION['lang']]); ?></h5>

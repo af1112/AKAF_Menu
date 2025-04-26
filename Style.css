@@ -65,16 +65,32 @@ body {
     margin: 80px auto 20px;
     padding: 20px;
 }
-
+/* Language Bar Styles */
 .language-bar {
-    position: fixed; /* موقعیت ثابت */
+    display: flex;
+    align-items: center;
+    background-color: #f8f9fa;
+    padding: 5px 10px;
+    position: fixed;
     top: 0;
     left: 0;
-    width: 100%; /* عرض کامل */
-    background-color: #f8f9fa;
-    padding: 5px 0;
-    z-index: 2000; /* بالاتر از بقیه المان‌ها */
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* اضافه کردن سایه */
+    right: 0;
+    z-index: 1100;
+    overflow-x: auto;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+html[dir="ltr"] .language-bar {
+    justify-content: flex-end;
+}
+
+html[dir="rtl"] .language-bar {
+    justify-content: flex-start; /* Start from the right in RTL */
+}
+.language-bar a {
+    margin: 0 8px;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .dark .language-bar {
@@ -110,11 +126,19 @@ body {
 }
 
 .flag-icon {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
+    transition: transform 0.2s ease;
 }
-
+.language-bar a.active-lang .flag-icon {
+    transform: scale(1.2);
+    border: 2px solid #2c3e50;
+}
+/* Adjust admin-header position to account for language bar */
+.admin-header {
+    top: 34px; /* Height of language-bar (24px flags + 5px padding top/bottom) */
+}
 /* Custom Navbar Styles */
 .custom-navbar {
     background-color: #ff5733;
@@ -492,6 +516,95 @@ body {
 }
 
 /* Card Styles */
+/* استایل برای کارت‌ها */
+.card {
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	overflow: hidden; /* جلوگیری از بیرون زدن محتوا */
+}
+
+/* ایجاد کانتینر مربع برای تصویر */
+.card-img-container {
+	position: relative;
+	width: 100%;
+	padding-top: 100%; /* نسبت 1:1 برای ایجاد مربع */
+	overflow: hidden;
+}
+
+.card-img-container img.card-img-top {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain; /* نمایش کامل تصویر بدون برش */
+	object-position: center; /* وسط‌چین کردن تصویر */
+}
+
+/* تنظیمات کارت برای نمایش بهتر */
+.card-body {
+	padding: 15px;
+	text-align: <?php echo $is_rtl ? 'right' : 'left'; ?>;
+}
+
+.card-title {
+	font-size: 1.1rem;
+	margin-bottom: 10px;
+}
+
+.card-text {
+	font-size: 0.9rem;
+	margin-bottom: 10px;
+}
+
+/* استایل برای دکمه‌ها */
+.d-flex {
+	gap: 10px;
+}
+
+/* تنظیمات برای موبایل */
+@media (max-width: 768px) {
+	.card-img-container {
+		width: 100%;
+        padding-top: 100%; /* نسبت 1:1 برای موبایل */
+        max-height: 250px; /* حداکثر ارتفاع برای موبایل */
+	}
+	.card-img-container img.card-img-top {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* اطمینان از نمایش کامل تصویر */
+        object-position: center;
+    }
+	.card {
+        margin-bottom: 20px; /* فاصله بین کارت‌ها */
+    }
+	.card-title {
+		font-size: 1rem;
+	}
+
+	.card-text {
+		font-size: 0.85rem;
+	}
+
+	.btn-sm {
+		font-size: 0.8rem;
+		padding: 5px 10px;
+	}
+}
+@media (max-width: 500px) {
+    .card-img-container {
+        padding-top: 100%; /* همچنان مربع بمونه */
+        max-height: 200px; /* ارتفاع کمتر برای موبایل‌های کوچک‌تر */
+    }
+
+    .card-img-container img.card-img-top {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+}
+
+
 .card {
     transition: transform 0.3s ease;
 }
@@ -1298,24 +1411,29 @@ body.admin-login {
 }
 /* Admin Dashboard Styles */
 .admin-body {
-    font-family: 'Noto Sans Arabic', sans-serif;
-    background-color: #f4f6f9;
-    min-height: 100vh;
-    display: flex;
+    font-family: 'Roboto', 'Vazir', sans-serif;
+    background-color: #ecf0f1;
+    margin: 0;
+    padding: 0;
 }
-
+.admin-body.dark {
+    background-color: #1a1a1a;
+    color: #ecf0f1;
+}
 .admin-header {
-    background-color: #2c3e50; /* رنگ آبی تیره برای هدر */
-    color: white;
-    padding: 15px 20px;
     display: flex;
+    flex-direction: row;
+    position: fixed;
+    top: 34px; /* Adjusted for language bar */
+    left: 0;
+    right: 0;
+    width: 100%;
+    background-color: #2c3e50;
+    color: white;
+    padding: 10px 0px;
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
     z-index: 1000;
 }
 
@@ -1326,44 +1444,36 @@ body.admin-login {
 
 .admin-header .controls {
     display: flex;
+	flex-direction: row;
     gap: 15px;
     align-items: center;
 }
 
 .admin-header .controls select,
 .admin-header .controls a {
-    color: white;
+    font-size: 1rem;
+    padding: 5px 10px;
     text-decoration: none;
-    font-size: 0.9rem;
-}
-
-.admin-header .controls select {
-    background-color: #34495e;
-    border: none;
-    padding: 5px;
-    border-radius: 5px;
     color: white;
+    transition: background-color 0.3s ease;
 }
 
 .admin-header .controls a:hover {
-    color: #bdc3c7;
-}
-
-.admin-header .controls i {
-    margin-right: 5px;
+    background-color: #34495e;
+    border-radius: 5px;
 }
 
 /* Sidebar */
 .admin-sidebar {
-    width: 250px;
-    background-color: #34495e;
-    color: white;
     position: fixed;
-    top: 60px; /* زیر هدر */
-    bottom: 0;
-    padding-top: 20px;
+    top: 0;
+    left: 0;
+    width: 220px;
+    height: 100%;
+    background-color: #34495e;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
+    z-index: 900;
+    padding-top: 100px;
 }
 /* حالت LTR: سایدبار در سمت چپ */
 html:not([dir="rtl"]) .admin-sidebar {
@@ -1382,16 +1492,17 @@ html[dir="rtl"] .admin-sidebar {
 }
 
 .admin-sidebar ul li {
-    padding: 15px 20px;
     border-bottom: 1px solid #2c3e50;
+    position: relative;
 }
 
 .admin-sidebar ul li a {
-    color: white;
-    text-decoration: none;
     display: flex;
     align-items: center;
-    gap: 10px;
+    padding: 15px 20px;
+    text-decoration: none;
+    color: white;
+    transition: all 0.3s ease;
 }
 
 .admin-sidebar ul li a:hover {
@@ -1408,19 +1519,24 @@ html[dir="rtl"] .admin-sidebar ul li a.active {
     border-left: none;
     border-right: 4px solid #3498db; /* در حالت RTL */
 }
+.admin-sidebar ul li a i {
+    margin-right: 10px;
+    font-size: 18px;
+}
 /* Main Content */
 .admin-content {
-    padding: 80px 20px 20px;
-    flex: 1;
+    margin-left: 220px;
+    padding: 100px 20px 20px 20px;
+    width: calc(100% - 220px);
 }
 /* حالت LTR: فاصله از سمت چپ */
 html:not([dir="rtl"]) .admin-content {
-    margin-left: 250px;
+    margin-left: 210px;
 }
 
 /* حالت RTL: فاصله از سمت راست */
 html[dir="rtl"] .admin-content {
-    margin-right: 250px;
+    margin-right: 210px;
 }
 .admin-section {
     background-color: white;
@@ -1479,10 +1595,10 @@ html[dir="rtl"] .admin-section form label {
 
 .foods-table th,
 .foods-table td {
-    padding: 8px 10px;
+    padding: 10px;
     text-align: left;
     border-bottom: 1px solid #ddd;
-    font-size: 0.9rem; /* کاهش اندازه فونت */
+
 }
 html[dir="rtl"] .foods-table th,
 html[dir="rtl"] .foods-table td {
@@ -1494,7 +1610,7 @@ html[dir="rtl"] .foods-table td {
 }
 
 .foods-table tr:hover {
-    background-color: #f9f9f9;
+    background-color: #f1f1f1;
 }
 .foods-table tr.pending {
     background-color: #fff3cd;
@@ -1519,39 +1635,14 @@ html[dir="rtl"] .foods-table td {
 .foods-table tr.completed {
     background-color: #e2e3e5;
 }
-.foods-table .button,
-.foods-table .delete-btn {
-    padding: 8px 12px;
-    border-radius: 5px;
-    text-decoration: none;
-    margin-right: 5px;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-}
-html[dir="rtl"] .foods-table .button,
-html[dir="rtl"] .foods-table .delete-btn {
-    margin-right: 0;
-    margin-left: 5px;
 
-.foods-table .button {
-    background-color: #3498db;
-    color: white;
+
+.admin-body.dark .foods-table th {
+    background-color: #34495e;
 }
 
-.foods-table .button:hover {
-    background-color: #2980b9;
-}
-
-.foods-table .delete-btn {
-    background-color: #e74c3c;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-.foods-table .delete-btn:hover {
-    background-color: #c0392b;
+.admin-body.dark .foods-table tbody tr:hover {
+    background-color: #2c3e50;
 }
 .foods-table select {
     padding: 5px;
@@ -1628,47 +1719,17 @@ html[dir="rtl"] .foods-table .delete-btn {
 	}
 }
 
-
-
-/* Form Styles */
-form {
+/* محدود کردن استایل‌های عمومی به صفحات غیرادمین */
+body:not(.admin-dashboard) form {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
-form label {
-    font-weight: bold;
-    color: #2c3e50;
-}
-
-form input,
-form textarea,
-form select {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-form textarea {
-    resize: vertical;
-    min-height: 100px;
-}
-
-form button {
-    padding: 10px;
-    background-color: #2ecc71;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1rem;
-}
-
-form button:hover {
-    background-color: #27ae60;
+body:not(.admin-dashboard) input,
+body:not(.admin-dashboard) textarea,
+body:not(.admin-dashboard) select {
+    /* استایل‌های عمومی */
 }
 
 /* Alert Styles */
@@ -1746,4 +1807,205 @@ form button:hover {
 
 .cart-table .delete-btn:hover {
     background-color: #c82333;
+}
+
+@font-face {
+    font-family: 'IRANYekan';
+    src: url('/myrestaurant/fonts/fonnts.com-Qs_Iranyekan.ttf') format('ttf'),
+         url('/myrestaurant/fonts/IRENYekan.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'IRANYekan';
+    src: url('/myrestaurant/fonts/fonnts.com-Qs_Iranyekan-bold.ttf') format('ttf')
+    font-weight: bold;
+    font-style: normal;
+}
+
+/* استایل‌های کلی برای دکمه‌ها */
+.button, button, input[type="submit"], input[type="button"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    margin: 5px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* دکمه‌های عمومی (مثل مشاهده، ویرایش، به‌روزرسانی) */
+.button, button[type="submit"], input[type="submit"] {
+    background-color: #4CAF50;
+    color: white;
+}
+
+/* تنظیم جهت و ترازبندی برای هر زبان */
+html[lang="fa"] .admin-section,
+html[lang="fa"] .admin-section label,
+html[lang="fa"] .admin-section input,
+html[lang="fa"] .admin-section textarea,
+html[lang="fa"] .admin-section select,
+html[lang="fa"] .button,
+html[lang="fa"] button,
+html[lang="fa"] input[type="submit"],
+html[lang="fa"] input[type="button"],
+html[lang="fa"] .delete-btn {
+    direction: rtl;
+    text-align: right;
+    font-family: 'IRANSans', sans-serif;
+}
+
+html[lang="ar"] .admin-section,
+html[lang="ar"] .admin-section label,
+html[lang="ar"] .admin-section input,
+html[lang="ar"] .admin-section textarea,
+html[lang="ar"] .admin-section select,
+html[lang="ar"] .button,
+html[lang="ar"] button,
+html[lang="ar"] input[type="submit"],
+html[lang="ar"] input[type="button"],
+html[lang="ar"] .delete-btn {
+    direction: rtl;
+    text-align: right;
+    font-family: 'Amiri', serif;
+}
+
+html[lang="en"] .admin-section,
+html[lang="en"] .admin-section label,
+html[lang="en"] .admin-section input,
+html[lang="en"] .admin-section textarea,
+html[lang="en"] .admin-section select,
+html[lang="en"] .button,
+html[lang="en"] button,
+html[lang="en"] input[type="submit"],
+html[lang="en"] input[type="button"],
+html[lang="en"] .delete-btn {
+    direction: ltr;
+    text-align: left;
+    font-family: 'Roboto', sans-serif;
+}
+
+html[lang="fr"] .admin-section,
+html[lang="fr"] .admin-section label,
+html[lang="fr"] .admin-section input,
+html[lang="fr"] .admin-section textarea,
+html[lang="fr"] .admin-section select,
+html[lang="fr"] .button,
+html[lang="fr"] button,
+html[lang="fr"] input[type="submit"],
+html[lang="fr"] input[type="button"],
+html[lang="fr"] .delete-btn {
+    direction: ltr;
+    text-align: left;
+    font-family: 'Lora', serif;
+}
+
+/* استایل‌های خاص برای فرم edit_food */
+.page-edit_food label {
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.page-edit_food input[type="text"],
+.page-edit_food input[type="number"],
+.page-edit_food textarea,
+.page-edit_food select {
+    width: 100%;
+    max-width: 500px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+.page-edit_food textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.page-edit_food input[type="checkbox"] {
+    width: auto;
+    margin-right: 5px;
+}
+
+/* بقیه‌ی استایل‌های دکمه‌ها */
+.button:hover, button[type="submit"]:hover, input[type="submit"]:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.button:active, button[type="submit"]:active, input[type="submit"]:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.button.cancel-btn, .cancel-btn {
+    background-color: #B0BEC5;
+    color: #37474F;
+}
+
+.button.cancel-btn:hover, .cancel-btn:hover {
+    background-color: #90A4AE;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.button.cancel-btn:active, .cancel-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.delete-btn {
+    background-color: #EF5350;
+    color: white;
+}
+
+.delete-btn:hover {
+    background-color: #E53935;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.delete-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.button i, .delete-btn i {
+    margin-right: 5px;
+}
+
+.foods-table .button, .foods-table .delete-btn {
+    padding: 8px 15px;
+    font-size: 13px;
+}
+
+@media (max-width: 600px) {
+    .button, .delete-btn, button, input[type="submit"], input[type="button"] {
+        padding: 8px 15px;
+        font-size: 12px;
+    }
+    
+    .button-group {
+        flex-direction: column;
+        gap: 8px;
+    }
 }

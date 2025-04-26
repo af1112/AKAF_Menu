@@ -174,6 +174,46 @@ foreach ($cart_items as $item) {
         body.dark-theme .menu-header h2 {
             color: #ff7043;
         }
+		.quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .quantity-control input[type="number"] {
+            width: 50px;
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .quantity-control input[type="number"]::-webkit-inner-spin-button,
+        .quantity-control input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .quantity-control button {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .quantity-control button:hover {
+            background: #e0e0e0;
+        }
 
         /* ✅ استایل منوی پایین برای موبایل */
         .menu-bar {
@@ -340,7 +380,9 @@ foreach ($cart_items as $item) {
         <a href="cart.php" class="shopping-cart">
             <i class="fa-solid fa-shopping-cart"></i>
             <span class="menu-text"><?php echo $lang['shopping_cart'] ?? 'Shopping Cart'; ?></span>
-            <span class="cart-badge" id="cart-count">2</span>
+             <?php if ($cart_count > 0): ?>
+                <span class="cart-badge"><?php echo $cart_count; ?></span>
+            <?php endif; ?>
         </a>
         <a href="favourite.php">
             <i class="fa-solid fa-heart"></i>
@@ -364,7 +406,7 @@ foreach ($cart_items as $item) {
                     <p class="availability <?php echo $food['is_available'] ? 'available' : 'unavailable'; ?>">
                         <?php echo $food['is_available'] ? ($lang['available'] ?? 'Available') : ($lang['unavailable'] ?? 'Unavailable'); ?>
                     </p>
-                    <p class="prep-time"><?php echo $lang['prep_time'] ?? 'Preparation Time'; ?>: 20 <?php echo $lang['minutes'] ?? 'minutes'; ?></p>
+                    <p class="prep-time"><?php echo $lang['prep_time'] ?? 'Preparation Time'; ?>:<?php echo $food['prep_time'] ? ($food['prep_time'] . ' ' . ($lang['minutes'] ?? 'minutes')) : ($lang['not_available'] ?? 'N/A'); ?> </p>
                     <p class="description">
                         <?php echo isset($food[$lang_desc_col]) ? htmlspecialchars($food[$lang_desc_col]) : 'توضیحات موجود نیست'; ?>
                     </p>
@@ -373,7 +415,11 @@ foreach ($cart_items as $item) {
                         <?php echo isset($food['ingredients_' . $_SESSION['lang']]) ? htmlspecialchars($food['ingredients_' . $_SESSION['lang']]) : 'مواد تشکیل‌دهنده مشخص نشده'; ?>
                     </p>
                     <div class="actions">
-                        <input type="number" class="quantity-input" value="1" min="1" id="quantity-<?php echo $food['id']; ?>">
+					     <div class="quantity-control">
+						 <button type="button" class="decrease" data-input-id="quantity-<?php echo $food['id']; ?>">-</button>
+                         <input type="number" id="quantity-<?php echo $food['id']; ?>" name="quantities[<?php echo $food['id']; ?>]" value="<?php echo $item['quantity']; ?>" min="0"  > 
+                         <button type="button" class="increase" data-input-id="quantity-<?php echo $food['id']; ?>">+</button>
+                        </div>
                         <button class="add-to-cart" onclick="addToCart(<?php echo $food['id']; ?>)">
                             <i class="fas fa-cart-plus"></i> <?php echo $lang['add_to_cart'] ?? 'Add to Cart'; ?>
                         </button>
@@ -449,6 +495,24 @@ foreach ($cart_items as $item) {
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
         AOS.init();
+		
+          document.querySelectorAll('.quantity-control .increase').forEach(button => {
+            button.addEventListener('click', () => {
+                const input = document.getElementById(button.dataset.inputId);
+                let value = parseInt(input.value) || 0;
+                input.value = value + 1;
+            });
+        });
+
+        document.querySelectorAll('.quantity-control .decrease').forEach(button => {
+            button.addEventListener('click', () => {
+                const input = document.getElementById(button.dataset.inputId);
+                let value = parseInt(input.value) || 0;
+                if (value > 0) {
+                    input.value = value - 1;
+                }
+            });
+        });		
 
         function addToCart(foodId) {
             const quantity = document.getElementById('quantity-' + foodId).value;

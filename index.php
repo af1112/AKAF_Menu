@@ -429,7 +429,9 @@ $hero_description = $hero_texts['description_' . $_SESSION['lang']] ?? ($lang['w
         <a href="cart.php" class="shopping-cart">
             <i class="fa-solid fa-shopping-cart"></i>
             <span class="menu-text"><?php echo $lang['shopping_cart'] ?? 'Shopping Cart'; ?></span>
-            <span class="cart-badge" id="cart-count">2</span>
+            <?php if ($cart_count > 0): ?>
+                <span class="cart-badge"><?php echo $cart_count; ?></span>
+            <?php endif; ?>
         </a>
         <a href="favourite.php">
             <i class="fa-solid fa-heart"></i>

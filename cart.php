@@ -155,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         break;
                     }
                 }
-				unset($item); // üõ†Ô∏è ÿ±ŸÅÿπ ÿ®ÿß⁄Ø ÿ™⁄©ÿ±ÿßÿ± ÿØÿ± order_items
+				unset($item); // —›⁄ »«ê  ò—«— œ— order_items
             }
             $_SESSION['cart'] = array_values($_SESSION['cart']);
         }
@@ -341,7 +341,7 @@ $is_mobile = isset($_SERVER['HTTP_USER_AGENT']) && (stripos($_SERVER['HTTP_USER_
             margin-top: 20px;
         }
 
-        /* ⁄Ü€åÿØŸÖÿßŸÜ ÿ¨ŸÖÿπ‚ÄåŸáÿß */
+        /* çÌœ„«‰ Ã„⁄ùÂ« */
         .cart-summary .cart-total {
             font-size: 18px;
             margin-bottom: 10px;
@@ -356,7 +356,7 @@ $is_mobile = isset($_SERVER['HTTP_USER_AGENT']) && (stripos($_SERVER['HTTP_USER_
             margin-bottom: 5px;
         }
 
-        /* ÿ™ŸÜÿ∏€åŸÖÿßÿ™ Ÿæ€åÿ¥‚ÄåŸÅÿ±ÿ∂ ÿ®ÿ±ÿß€å LTR */
+        /*  ‰ŸÌ„«  ÅÌ‘ù›—÷ »—«Ì LTR */
         .cart-summary .cart-total.ltr {
             align-items: flex-end;
         }
@@ -365,7 +365,7 @@ $is_mobile = isset($_SERVER['HTTP_USER_AGENT']) && (stripos($_SERVER['HTTP_USER_
             justify-content: flex-end;
         }
 
-        /* ÿ™ŸÜÿ∏€åŸÖÿßÿ™ ÿ®ÿ±ÿß€å RTL */
+        /*  ‰ŸÌ„«  »—«Ì RTL */
         .cart-summary .cart-total.rtl {
             align-items: flex-start !important;
         }
@@ -433,7 +433,7 @@ $is_mobile = isset($_SERVER['HTTP_USER_AGENT']) && (stripos($_SERVER['HTTP_USER_
             background: #218838;
         }
 
-        /* ÿßÿ≥ÿ™ÿß€åŸÑ‚ÄåŸáÿß€å ŸÖŸàÿ®ÿß€åŸÑ */
+        /* «” «Ì·ùÂ«Ì „Ê»«Ì· */
         .cart-table-mobile {
             display: none;
         }
@@ -731,10 +731,12 @@ $is_mobile = isset($_SERVER['HTTP_USER_AGENT']) && (stripos($_SERVER['HTTP_USER_
                 <section class="cart-summary">
                     <form method="POST" action="cart.php">
                         <?php if (!$is_mobile): ?>
-                            <!-- ŸÜŸÖÿß€åÿ¥ ÿ¨ÿØŸàŸÑ ÿ®ÿ±ÿß€å ÿØÿ≥⁄©ÿ™ÿßŸæ -->
+                            <!-- ‰„«Ì‘ ÃœÊ· »—«Ì œ”ò «Å -->
                             <table class="cart-table">
+			                  <div class="cart-item-normal" data-price="<?php echo $item['price']; ?>">
+
                                 <thead>
-                                    <tr>
+                                    <tr class="cart-item-normal" data-price="<?php echo $item['price']; ?>">
                                         <th><?php echo $lang['food'] ?? 'Food'; ?></th>
                                         <th><?php echo $lang['quantity'] ?? 'Quantity'; ?></th>
                                         <th><?php echo $lang['price'] ?? 'Price'; ?></th>
@@ -745,17 +747,25 @@ $is_mobile = isset($_SERVER['HTTP_USER_AGENT']) && (stripos($_SERVER['HTTP_USER_
                                 </thead>
                                 <tbody>
                                     <?php foreach ($_SESSION['cart'] as $item): ?>
-                                        <tr>
+                                        <tr class="cart-item-normal" data-price="<?php echo $item['price']; ?>">
                                             <td class="item-name">
                                                 <a href="food_details.php?id=<?php echo $item['id']; ?>">
                                                     <?php echo htmlspecialchars($item['name']); ?>
                                                 </a>
                                             </td>
                                             <td>
-                                                <input type="number" name="quantities[<?php echo $item['id']; ?>]" value="<?php echo $item['quantity']; ?>" min="0" style="width: 60px;">
+                                                <div class="quantity-control">
+                                                <button type="button" class="decrease" data-input-id="quantity-<?php echo $item['id']; ?>">-</button>
+                                                <input type="number" id="quantity-<?php echo $item['id']; ?>" name="quantities[<?php echo $item['id']; ?>]" value="<?php echo $item['quantity']; ?>" min="0" readonly>
+												<button type="button" class="increase" data-input-id="quantity-<?php echo $item['id']; ?>">+</button>
+                                                </div>
                                             </td>
                                             <td><?php echo number_format($item['price'], $currency_Decimal); ?> <?php echo $currency; ?></td>
-                                            <td><?php echo number_format($item['price'] * $item['quantity'], $currency_Decimal); ?> <?php echo $currency; ?></td>
+                                            <td>
+											    <div class="item-detail">
+												<span class="subtotal"><?php echo number_format($item['price'] * $item['quantity'], $currency_Decimal); ?> <?php echo $currency; ?></span>
+											     </div>
+											</td>
                                             <td class="special-request">
                                                 <input type="text" name="comments[<?php echo $item['id']; ?>]" value="<?php echo htmlspecialchars($item['comment'] ?? ''); ?>">
                                             </td>
@@ -767,12 +777,13 @@ $is_mobile = isset($_SERVER['HTTP_USER_AGENT']) && (stripos($_SERVER['HTTP_USER_
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
+								</div>
                             </table>
                         <?php else: ?>
-                            <!-- ŸÜŸÖÿß€åÿ¥ ⁄©ÿßÿ±ÿ™‚ÄåŸáÿß ÿ®ÿ±ÿß€å ŸÖŸàÿ®ÿß€åŸÑ -->
+                            <!-- ‰„«Ì‘ ò«— ùÂ« »—«Ì „Ê»«Ì· -->
                             <div class="cart-table-mobile">
                                 <?php foreach ($_SESSION['cart'] as $item): ?>
-                                    <div class="cart-item-mobile">
+                                    <div class="cart-item-mobile" data-price="<?php echo $item['price']; ?>">
                                         <div class="item-name">
                                             <a href="food_details.php?id=<?php echo $item['id']; ?>">
                                                 <?php echo htmlspecialchars($item['name']); ?>
@@ -791,11 +802,11 @@ $is_mobile = isset($_SERVER['HTTP_USER_AGENT']) && (stripos($_SERVER['HTTP_USER_
                                         </div>
                                         <div class="item-detail">
                                             <span><?php echo $lang['price'] ?? 'Price'; ?>:</span>
-                                            <span><?php echo number_format($item['price'], $currency_Decimal); ?> <?php echo $currency; ?></span>
+                                            <span class="price"><?php echo number_format($item['price'], $currency_Decimal); ?> <?php echo $currency; ?></span>
                                         </div>
                                         <div class="item-detail">
                                             <span><?php echo $lang['subtotal'] ?? 'SubTotal'; ?>:</span>
-                                            <span><?php echo number_format($item['price'] * $item['quantity'], $currency_Decimal); ?> <?php echo $currency; ?></span>
+                                            <span class="subtotal"><?php echo number_format($item['price'] * $item['quantity'], $currency_Decimal); ?> <?php echo $currency; ?></span>
                                         </div>
                                         <div class="item-detail">
                                             <span><?php echo $lang['Special_Request'] ?? 'Special Request'; ?>:</span>
@@ -813,17 +824,17 @@ $is_mobile = isset($_SERVER['HTTP_USER_AGENT']) && (stripos($_SERVER['HTTP_USER_
                             <div class="cart-total <?php echo $is_rtl ? 'rtl' : 'ltr'; ?>">
                                 <div class="summary-row">
                                     <span class="label"><?php echo $lang['total'] ?? 'Total'; ?>:</span>
-                                    <span class="value"><?php echo number_format($total_price, $currency_Decimal); ?></span>
+                                    <span class="value total-value"><?php echo number_format($total_price, $currency_Decimal); ?></span>
                                     <span class="currency"><?php echo $currency; ?></span>
                                 </div>
                                 <div class="summary-row">
                                     <span class="label"><?php echo $lang['VAT'] ?? 'VAT'; ?> (<?php echo $vat_rate * 100; ?>%):</span>
-                                    <span class="value"><?php echo number_format($vat_amount, $currency_Decimal); ?></span>
+                                    <span class="value vat-value"><?php echo number_format($vat_amount, $currency_Decimal); ?></span>
                                     <span class="currency"><?php echo $currency; ?></span>
                                 </div>
                                 <div class="summary-row grand-total">
                                     <span class="label"><?php echo $lang['grand_total'] ?? 'Grand Total'; ?>:</span>
-                                    <span class="value"><?php echo number_format($grand_total, $currency_Decimal); ?></span>
+                                    <span class="value grand-total-value"><?php echo number_format($grand_total, $currency_Decimal); ?></span>
                                     <span class="currency"><?php echo $currency; ?></span>
                                 </div>
                             </div>
@@ -852,12 +863,94 @@ $is_mobile = isset($_SERVER['HTTP_USER_AGENT']) && (stripos($_SERVER['HTTP_USER_
     <script>
         AOS.init();
 
-        // ŸÖÿØ€åÿ±€åÿ™ ÿØ⁄©ŸÖŸá‚ÄåŸáÿß€å ÿßŸÅÿ≤ÿß€åÿ¥ Ÿà ⁄©ÿßŸáÿ¥ ÿ™ÿπÿØÿßÿØ ÿ™Ÿà€å ŸÖŸàÿ®ÿß€åŸÑ
+        //  «»⁄ »—«Ì ›—„  ò—œ‰ «⁄œ«œ »«  ⁄œ«œ «⁄‘«— „‘Œ’
+        function formatNumber(number, decimals) {
+            return Number(number).toFixed(decimals);
+        }
+
+        //  «»⁄ »—«Ì „Õ«”»Â Ê »Âù—Ê“—”«‰Ì Ã„⁄ ò·ùÂ«
+        function updateCartSummary() {
+            let totalPrice = 0;
+            const vatRate = <?php echo $vat_rate; ?>;
+            const applyVat = <?php echo $apply_vat ? 1 : 0; ?>;
+            const decimals = <?php echo $currency_Decimal; ?>;
+
+            // Ã„⁄ ò· ¬Ì „ùÂ«
+             document.querySelectorAll('.cart-item-normal').forEach(item => {
+                const price = parseFloat(item.dataset.price) || 0;
+                const quantityInput = item.querySelector('input[type="number"]');
+                const quantity = parseInt(quantityInput?.value) || 0;
+                const subtotal = price * quantity;
+
+
+                // »Âù—Ê“—”«‰Ì Ã„⁄ ò· Â— ¬Ì „
+                const subtotalElement = item.querySelector('.subtotal');
+                if (subtotalElement) {
+                    subtotalElement.textContent = formatNumber(subtotal, decimals) + ' <?php echo $currency; ?>';
+                }
+
+                totalPrice += subtotal;
+            });
+			
+
+			
+            // Ã„⁄ ò· ¬Ì „ùÂ«
+            document.querySelectorAll('.cart-item-mobile').forEach(item => {
+                const price = parseFloat(item.dataset.price) || 0;
+                const quantityInput = item.querySelector('input[type="number"]');
+                const quantity = parseInt(quantityInput.value) || 0;
+                const subtotal = price * quantity;
+
+
+                // »Âù—Ê“—”«‰Ì Ã„⁄ ò· Â— ¬Ì „
+                const subtotalElement = item.querySelector('.subtotal');
+                if (subtotalElement) {
+                    subtotalElement.textContent = formatNumber(subtotal, decimals) + ' <?php echo $currency; ?>';
+                }
+
+                totalPrice += subtotal;
+            });
+			
+			
+
+            // „Õ«”»Â „«·Ì«  Ê Ã„⁄ ò· ‰Â«ÌÌ
+            const vatAmount = applyVat ? totalPrice * vatRate : 0;
+            const grandTotal = totalPrice + vatAmount;
+
+            // »Âù—Ê“—”«‰Ì „ﬁ«œÌ— œ— ’›ÕÂ
+            document.querySelector('.total-value').textContent = formatNumber(totalPrice, decimals);
+            document.querySelector('.vat-value').textContent = formatNumber(vatAmount, decimals);
+            document.querySelector('.grand-total-value').textContent = formatNumber(grandTotal, decimals);
+
+            // »Âù—Ê“—”«‰Ì  ⁄œ«œ ò· ¬Ì „ùÂ« œ— ”»œ Œ—Ìœ
+            let totalItems = 0;
+			
+            document.querySelectorAll('.cart-item-mobile input[type="number"]').forEach(input => {
+                totalItems += parseInt(input.value) || 0;
+            });
+            const cartCountElements = document.querySelectorAll('.cart-count, .cart-badge');
+            cartCountElements.forEach(element => {
+                if (totalItems > 0) {
+                    element.textContent = totalItems;
+                    element.style.display = 'inline-block';
+                } else {
+                    element.style.display = 'none';
+                }
+            });
+        }
+
+        // „œÌ—Ì  œò„ÂùÂ«Ì «›“«Ì‘ Ê ò«Â‘  ⁄œ«œ
         document.querySelectorAll('.quantity-control .increase').forEach(button => {
             button.addEventListener('click', () => {
                 const input = document.getElementById(button.dataset.inputId);
                 let value = parseInt(input.value) || 0;
                 input.value = value + 1;
+                updateCartSummary();
+				const subtotal = (price * quantity).toFixed(3) + ' OMR';
+            const subtotalElement = document.getElementById('subtotal-' + id);
+            if (subtotalElement) {
+                subtotalElement.textContent = subtotal;
+            }
             });
         });
 
@@ -867,9 +960,26 @@ $is_mobile = isset($_SERVER['HTTP_USER_AGENT']) && (stripos($_SERVER['HTTP_USER_
                 let value = parseInt(input.value) || 0;
                 if (value > 0) {
                     input.value = value - 1;
+                    updateCartSummary();
                 }
+				const subtotal = (price * quantity).toFixed(3) + ' OMR';
+            const subtotalElement = document.getElementById('subtotal-' + id);
+            if (subtotalElement) {
+                subtotalElement.textContent = subtotal;
+            }
             });
         });
+
+        // „œÌ—Ì   €ÌÌ— œ” Ì „ﬁœ«— Ê—ÊœÌ
+        document.querySelectorAll('.quantity-control input[type="number"]').forEach(input => {
+            input.addEventListener('input', () => {
+                if (input.value < 0) input.value = 0;
+                updateCartSummary();
+            });
+        });
+
+        // »Âù—Ê“—”«‰Ì «Ê·ÌÂ Ã„⁄ ò·ùÂ«
+        updateCartSummary();
 
         function fetchCartCount() {
             fetch('get_cart_count.php')

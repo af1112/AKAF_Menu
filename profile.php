@@ -493,7 +493,7 @@ $theme_class = $user['theme'] === 'dark' ? 'dark-theme' : 'light-theme';
                     $stmt->execute([$user_id]);
                     $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     foreach ($orders as $order) {
-                        echo '<li class="list-group-item text-start">Order #' . $order['id'] . ' - ' . $order['created_at'] . ' - ' . $order['total_amount'] . ' OMR</li>';
+                        echo '<li class="list-group-item text-start">Order #' . $order['id'] . ' - ' . $order['created_at'] . ' - ' . $order['grand_total'] . ' OMR</li>';
                     }
                     if (empty($orders)) {
                         echo '<li class="list-group-item text-start">' . ($lang['no_orders'] ?? 'No past orders.') . '</li>';

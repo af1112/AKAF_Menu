@@ -1,0 +1,1749 @@
+/* تعریف متغیرهای CSS برای تم روشن */
+:root {
+    --background-color: #f4f4f4;
+    --text-color: #333;
+    --header-bg: linear-gradient(to right, #ff6f61, #ff9f43);
+    --header-text: white;
+    --card-bg: white;
+    --card-text: #666;
+    --card-title: #ff6f61;
+    --button-bg: #ff6f61;
+    --button-text: white;
+    --button-hover-bg: #e65b50;
+    --secondary-button-bg: #f0f0f0;
+    --secondary-button-text: #333;
+    --secondary-button-hover-bg: #e0e0e0;
+    --link-color: #ff6f61;
+    --link-hover-color: #e65b50;
+    --border-color: #ddd;
+    --error-color: #dc3545;
+    --success-color: #28a745;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --table-header-bg: #f9f9f9;
+    --filter-bg: #e0e0e0;
+    --filter-active-bg: #ff6f61;
+}
+
+/* اعمال تم تیره */
+body.dark {
+    --background-color: #1a1a1a;
+    --text-color: #e0e0e0;
+    --header-bg: linear-gradient(to right, #333, #555);
+    --header-text: #e0e0e0;
+    --card-bg: #2c2c2c;
+    --card-text: #b0b0b0;
+    --card-title: #ff9f43;
+    --button-bg: #ff9f43;
+    --button-text: #1a1a1a;
+    --button-hover-bg: #e68a00;
+    --secondary-button-bg: #444;
+    --secondary-button-text: #e0e0e0;
+    --secondary-button-hover-bg: #555;
+    --link-color: #ff9f43;
+    --link-hover-color: #e68a00;
+    --border-color: #444;
+    --error-color: #ff5555;
+    --success-color: #55ff55;
+    --shadow-color: rgba(255, 255, 255, 0.1);
+    --table-header-bg: #333;
+    --filter-bg: #444;
+    --filter-active-bg: #ff9f43;
+}
+
+/* استایل‌های عمومی */
+body {
+    font-family: 'Noto Sans Arabic', 'Arial', sans-serif;
+    background-color: var(--background-color);
+    margin: 0;
+    padding: 0;
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 80px auto 20px;
+    padding: 20px;
+}
+
+.language-bar {
+    position: fixed; /* موقعیت ثابت */
+    top: 0;
+    left: 0;
+    width: 100%; /* عرض کامل */
+    background-color: #f8f9fa;
+    padding: 5px 0;
+    z-index: 2000; /* بالاتر از بقیه المان‌ها */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* اضافه کردن سایه */
+}
+
+.dark .language-bar {
+    background-color: #343a40;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* سایه تیره‌تر برای تم تیره */
+}
+
+.language-switcher {
+    display: flex;
+    gap: 10px;
+    margin-left: 20px; /* فاصله از سمت چپ */
+    direction: ltr; /* همیشه از چپ به راست */
+}
+
+.language-switcher .lang-link {
+    font-size: 14px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #212529;
+    text-decoration: none;
+}
+
+.dark .language-switcher .lang-link {
+    color: #f8f9fa;
+}
+
+.language-switcher .lang-link.active {
+    background-color: #ff5733;
+    color: white !important;
+}
+
+.flag-icon {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+}
+
+/* Custom Navbar Styles */
+.custom-navbar {
+    background-color: #ff5733;
+    padding: 15px 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-top: 40px; /* فاصله از بالای صفحه به اندازه ارتفاع language-bar */
+}
+
+.dark .custom-navbar {
+    background-color: #d94827;
+}
+
+.custom-navbar .navbar-brand,
+.custom-navbar .nav-link {
+    color: white !important;
+}
+
+.custom-navbar .nav-link:hover {
+    color: #f0f0f0 !important;
+}
+
+.custom-navbar .nav-link i {
+    margin-right: 5px;
+}
+
+.custom-navbar .navbar-nav {
+    gap: 20px;
+    position: relative;
+}
+.nav-rtl {
+    display: flex;
+    width: 100%;
+    align-items: center; /* برای تراز عمودی */
+}
+.nav-rtl .login-item {
+    order: -1; /* همچنان به چپ منتقل می‌شه */
+    position: absolute; /* موقعیت ثابت نسبت به navbar-nav */
+    left: 20px; /* فاصله‌ی 20px از لبه‌ی چپ */
+}
+.nav-rtl .login-item .nav-link {
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.1); /* یه پس‌زمینه‌ی ملایم */
+}
+.nav-rtl .nav-item:not(.login-item) {
+    margin-left: 0; /* بقیه‌ی گزینه‌ها به سمت راست منتقل می‌شن */
+    display: flex;
+    gap: 20px;
+}
+.navbar-nav:not(.nav-rtl) {
+    display: flex;
+    gap: 20px;
+    justify-content: flex-end; /* گزینه‌ها به سمت راست */
+}
+/* RTL Support for Navbar */
+[dir="rtl"] .custom-navbar .navbar-brand {
+    margin-right: 0;
+    margin-left: auto;
+}
+
+[dir="rtl"] .custom-navbar .nav-link i {
+    margin-right: 0;
+    margin-left: 5px;
+}
+/* خنثی کردن padding پیش‌فرض container-fluid در حالت RTL */
+[dir="rtl"] .custom-navbar .container-fluid {
+    padding-left: 0; /* حذف padding سمت چپ */
+}
+
+
+/* Cart Count Style */
+.cart-count {
+    display: inline-block;
+    background-color: white;
+    color: #ff5733;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 50%;
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    line-height: 1;
+}
+
+/* Header Styles (for pages without navbar) */
+.header {
+    background-color: #2c3e50;
+    padding: 10px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 30px;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+.dark .header {
+    background-color: #1a252f; /* یه رنگ کمی تیره‌تر برای تم تیره */
+    color: #e0e0e0;
+}
+.header h1 {
+    margin: 0;
+    font-size: 24x;
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.controls a, .controls select {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.controls select {
+    padding: 5px;
+    border-radius: 5px;
+    border: none;
+    background-color: #34495e;
+    color: white;
+}
+
+.controls a:hover, .controls select:hover {
+    background-color: var(--button-hover-bg);
+    transform: scale(1.05);
+}
+
+.controls a {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.controls a:hover {
+    color: #3498db;
+}
+/* RTL Support for Header */
+[dir="rtl"] .header h1 {
+    order: 1;
+}
+
+[dir="rtl"] .controls {
+    order: 0;
+}
+
+/* Hero Section */
+.hero-section {
+    background: url('images/restaurant-hero.jpg') no-repeat center center/cover;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    position: relative;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 1;
+}
+
+.hero-content h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeIn 1s ease-in forwards;
+    animation-delay: 0.3s;
+}
+
+.hero-content p {
+    font-size: 1.2rem;
+    opacity: 0;
+    animation: fadeIn 1s ease-in forwards;
+    animation-delay: 0.6s;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Categories Section (for index.php) */
+.indexcategories-section {
+    padding: 50px 0;
+}
+
+.indexcategories-section h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--card-title);
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+.indexcategory-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+.indexcategory-card {
+    text-align: center;
+    text-decoration: none;
+    color: #212529;
+    transition: transform 0.3s ease;
+}
+
+.dark .indexcategory-card {
+    color: #f8f9fa;
+}
+
+.indexcategory-card:hover {
+    transform: translateY(-5px);
+}
+
+.indexcategory-image {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid #ff5733;
+    margin-bottom: 10px;
+}
+
+.indexcategory-card h3 {
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+/* Categories Section (for older version) */
+.categories-section {
+    margin-bottom: 60px;
+}
+
+.categories-section h2 {
+    color: var(--card-title);
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+.category-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 40px;
+    padding: 0 20px;
+}
+
+.category-card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 6px 15px var(--shadow-color);
+    text-align: center;
+    text-decoration: none;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.category-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 20px var(--shadow-color);
+}
+
+.category-card img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-bottom: 3px solid var(--button-bg);
+}
+
+.category-card h3 {
+    padding: 20px;
+    margin: 0;
+    color: var(--card-title);
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Category Carousel (for menu.php) */
+.category-carousel {
+    overflow: hidden;
+}
+
+.category-items {
+    display: flex;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    gap: 15px;
+    padding: 10px 0;
+    cursor: grab;
+}
+
+.category-items::-webkit-scrollbar {
+    display: none;
+}
+
+.category-items.active {
+    cursor: grabbing;
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background-color: #f8f9fa;
+    border-radius: 25px;
+    text-decoration: none;
+    color: #212529;
+    white-space: nowrap;
+    transition: background-color 0.3s;
+}
+
+.dark .category-item {
+    background-color: #343a40;
+    color: #f8f9fa;
+}
+
+.category-item:hover {
+    background-color: #e9ecef;
+}
+
+.dark .category-item:hover {
+    background-color: #495057;
+}
+
+.category-item.active {
+    background-color: #ff5733;
+    color: white;
+}
+
+.category-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid #ff5733;
+}
+
+/* Card Styles */
+.card {
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.card-img-top {
+    height: 200px;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/* Footer Styles */
+.footer {
+    background: var(--header-bg);
+    color: var(--header-text);
+    text-align: center;
+    padding: 20px;
+    margin-top: 40px;
+}
+
+.footer h5 {
+    margin-bottom: 15px;
+}
+
+.footer a {
+    color: #f0f0f0;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    color: white;
+}
+
+.footer .list-unstyled li {
+    margin-bottom: 10px;
+}
+
+.footer .list-unstyled i {
+    margin-right: 8px;
+}
+
+[dir="rtl"] .footer .list-unstyled i {
+    margin-right: 0;
+    margin-left: 8px;
+}
+
+.footer p {
+    margin: 5px 0;
+}
+
+/* استایل‌های menu.php */
+.filters {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.filters button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    background-color: var(--filter-bg);
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+.filters button.active, .filters button:hover {
+    background-color: var(--filter-active-bg);
+    color: var(--button-text);
+    transform: scale(1.05);
+}
+
+.menu-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.food-card {
+    background: var(--card-bg);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px var(--shadow-color);
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.food-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px var(--shadow-color);
+}
+
+.food-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.food-card .info {
+    padding: 15px;
+}
+
+.food-card h3 {
+    margin: 0 0 10px;
+    font-size: 1.5rem;
+    color: var(--card-title);
+}
+
+.food-card p {
+    margin: 5px 0;
+    color: var(--card-text);
+}
+
+.food-card .price {
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+.food-card .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.food-card button, .food-card a {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.food-card button {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+}
+
+.food-card a {
+    background-color: var(--secondary-button-bg);
+    color: var(--secondary-button-text);
+}
+
+.food-card button:hover {
+    background-color: var(--button-hover-bg);
+}
+
+.food-card a:hover {
+    background-color: var(--secondary-button-hover-bg);
+}
+
+/* استایل‌های food_details.php */
+.food-details {
+    background: var(--card-bg);
+    border-radius: 15px;
+    box-shadow: 0 4px 10px var(--shadow-color);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.food-details .main-info {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.food-details .main-image {
+    width: 100%;
+    max-width: 400px;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.food-details .info-text {
+    flex: 1;
+}
+
+.food-details h2 {
+    color: var(--card-title);
+    margin: 0 0 10px;
+    font-size: 2rem;
+}
+
+.food-details .price {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-color);
+    margin: 10px 0;
+}
+
+.food-details .availability {
+    font-size: 1.1rem;
+    margin: 10px 0;
+}
+
+.food-details .availability.available {
+    color: var(--success-color);
+}
+
+.food-details .availability.unavailable {
+    color: var(--error-color);
+}
+
+.food-details .prep-time {
+    font-size: 1.1rem;
+    color: var(--card-text);
+    margin: 10px 0;
+}
+
+.food-details .description, .food-details .ingredients {
+    margin: 15px 0;
+    color: var(--card-text);
+    line-height: 1.6;
+}
+
+.food-details .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.food-details .actions button, .food-details .actions a {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s;
+}
+
+.food-details .actions .quantity-input {
+    padding: 10px;
+    width: 60px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+.food-details .actions .add-to-cart {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+}
+
+.food-details .actions .add-to-cart:disabled {
+    background-color: var(--border-color);
+    cursor: not-allowed;
+}
+
+.food-details .actions .add-to-cart:hover:not(:disabled) {
+    background-color: var(--button-hover-bg);
+}
+
+.food-details .actions .share {
+    background-color: var(--success-color);
+    color: var(--button-text);
+}
+
+.food-details .actions .share:hover {
+    background-color: #218838;
+}
+
+.food-details .actions .back {
+    background-color: var(--secondary-button-bg);
+    color: var(--secondary-button-text);
+}
+
+.food-details .actions .back:hover {
+    background-color: var(--secondary-button-hover-bg);
+}
+
+.gallery-images {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+}
+
+.gallery-images img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.gallery-images img:hover {
+    transform: scale(1.05);
+}
+
+.reviews, .add-review {
+    background: var(--card-bg);
+    border-radius: 15px;
+    box-shadow: 0 4px 10px var(--shadow-color);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.reviews h3, .add-review h3 {
+    color: var(--card-title);
+    margin: 0 0 15px;
+}
+
+.review-item {
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 0;
+}
+
+.review-item:last-child {
+    border-bottom: none;
+}
+
+.review-item p {
+    margin: 5px 0;
+    color: var(--card-text);
+}
+
+.add-review form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.add-review label {
+    font-weight: bold;
+}
+
+.add-review select, .add-review textarea {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+.add-review textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.add-review button {
+    padding: 10px;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.add-review button:hover {
+    background-color: var(--button-hover-bg);
+}
+
+/* استایل‌های checkout.php */
+.checkout {
+    background: var(--card-bg);
+    border-radius: 15px;
+    box-shadow: 0 4px 10px var(--shadow-color);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.checkout h2 {
+    color: var(--card-title);
+    margin: 0 0 20px;
+}
+
+.order-summary {
+    margin-bottom: 30px;
+}
+
+.order-summary h3 {
+    color: var(--text-color);
+    margin: 0 0 15px;
+}
+
+.checkout-form {
+    margin-top: 30px;
+}
+
+.checkout-form h3 {
+    color: var(--text-color);
+    margin: 0 0 15px;
+}
+
+.checkout-form form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.checkout-form label {
+    font-weight: bold;
+}
+
+.checkout-form input, .checkout-form textarea {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+.checkout-form textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.checkout-form .error, .checkout-form .success {
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.checkout-form .error {
+    background-color: #f8d7da;
+    color: var(--error-color);
+}
+
+.checkout-form .success {
+    background-color: #d4edda;
+    color: var(--success-color);
+}
+
+.checkout-form button {
+    padding: 10px 20px;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.checkout-form button:hover {
+    background-color: var(--button-hover-bg);
+}
+
+/* استایل‌های user_dashboard.php */
+.dashboard {
+    background: var(--card-bg);
+    border-radius: 15px;
+    box-shadow: 0 4px 10px var(--shadow-color);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.dashboard h2 {
+    color: var(--card-title);
+    margin: 0 0 20px;
+}
+
+.profile, .orders {
+    margin-bottom: 30px;
+}
+
+.profile h3, .orders h3 {
+    color: var(--text-color);
+    margin: 0 0 15px;
+}
+
+.profile form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 500px;
+}
+
+.profile label {
+    font-weight: bold;
+}
+
+.profile input {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+.profile .error, .profile .success {
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.profile .error {
+    background-color: #f8d7da;
+    color: var(--error-color);
+}
+
+.profile .success {
+    background-color: #d4edda;
+    color: var(--success-color);
+}
+
+.profile button {
+    padding: 10px 20px;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.profile button:hover {
+    background-color: var(--button-hover-bg);
+}
+
+.orders-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.orders-table th, .orders-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.orders-table th {
+    background-color: var(--table-header-bg);
+    color: var(--card-title);
+}
+
+.orders-table td {
+    color: var(--card-text);
+}
+
+/* استایل‌های admin_dashboard.php */
+.orders, .manage-foods {
+    margin-bottom: 30px;
+}
+
+.orders h3, .manage-foods h3 {
+    color: var(--text-color);
+    margin: 0 0 15px;
+}
+.add-food h3 {
+    margin-top: 0;
+    font-size: 22px;
+    color: #2c3e50;
+}
+.dark .add-food h3 {
+    color: #ecf0f1;
+}
+.add-food {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+.dark .add-food {
+    background-color: #2c3e50;
+    color: white;
+}
+.foods-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.foods-table th, .foods-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.foods-table th {
+    background-color: var(--table-header-bg);
+    color: var(--card-title);
+}
+
+.foods-table td {
+    color: var(--card-text);
+}
+
+.orders-table form, .foods-table form {
+    display: inline;
+}
+
+.orders-table select, .foods-table input {
+    padding: 5px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+.orders-table button, .foods-table button {
+    padding: 5px 10px;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.orders-table button:hover, .foods-table button:hover {
+    background-color: var(--button-hover-bg);
+}
+.add-food input[type="text"],
+.add-food input[type="number"],
+.add-food textarea,
+.add-food select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.add-food textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.add-food input[type="checkbox"] {
+    width: auto;
+}
+
+.add-food input[type="file"] {
+    border: none;
+    padding: 0;
+}
+
+.add-food button {
+    background-color: #3498db;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.add-food button:hover {
+    background-color: #2980b9;
+}
+
+.error {
+    color: #e74c3c;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.foods-table .delete-btn {
+    background-color: var(--error-color);
+}
+
+.foods-table .delete-btn:hover {
+    background-color: #c82333;
+}
+
+.add-food form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 500px;
+}
+
+.add-food label {
+    font-weight: bold;
+    color: #2c3e50;
+}
+.dark .add-food label {
+    color: #ecf0f1;
+}
+.add-food textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+/* استایل‌های admin_login.php */
+body.admin-login {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: var(--background-color);
+}
+
+.login-box {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px var(--shadow-color);
+    width: 300px;
+}
+
+.login-box h2 {
+    color: var(--card-title);
+    text-align: center;
+}
+
+.login-box form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.login-box input {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+}
+
+.login-box button {
+    padding: 10px;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.login-box button:hover {
+    background-color: var(--button-hover-bg);
+}
+
+.login-box .error {
+    color: var(--error-color);
+    text-align: center;
+}
+
+/* استایل نوتیفیکیشن */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: var(--success-color);
+    color: var(--button-text);
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px var(--shadow-color);
+    display: none;
+    z-index: 2000;
+}
+
+.notification.show {
+    display: block;
+}
+
+/* ریسپانسیو */
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 1.5rem;
+    }
+
+    .header .controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .menu-items {
+        grid-template-columns: 1fr;
+    }
+
+    .food-details .main-info {
+        flex-direction: column;
+    }
+
+    .food-details .main-image {
+        max-width: 100%;
+        height: 200px;
+    }
+
+    .cart-table th, .cart-table td {
+        font-size: 0.9rem;
+        padding: 8px;
+    }
+
+    .total {
+        text-align: left;
+    }
+
+    .orders-table th, .orders-table td, .foods-table th, .foods-table td {
+        font-size: 0.9rem;
+        padding: 8px;
+    }
+}
+/* Admin Dashboard Styles */
+.admin-body {
+    font-family: 'Noto Sans Arabic', sans-serif;
+    background-color: #f4f6f9;
+    min-height: 100vh;
+    display: flex;
+}
+
+.admin-header {
+    background-color: #2c3e50; /* رنگ آبی تیره برای هدر */
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+.admin-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.admin-header .controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.admin-header .controls select,
+.admin-header .controls a {
+    color: white;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.admin-header .controls select {
+    background-color: #34495e;
+    border: none;
+    padding: 5px;
+    border-radius: 5px;
+    color: white;
+}
+
+.admin-header .controls a:hover {
+    color: #bdc3c7;
+}
+
+.admin-header .controls i {
+    margin-right: 5px;
+}
+
+/* Sidebar */
+.admin-sidebar {
+    width: 250px;
+    background-color: #34495e;
+    color: white;
+    position: fixed;
+    top: 60px; /* زیر هدر */
+    bottom: 0;
+    padding-top: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+/* حالت LTR: سایدبار در سمت چپ */
+html:not([dir="rtl"]) .admin-sidebar {
+    left: 0;
+}
+
+/* حالت RTL: سایدبار در سمت راست */
+html[dir="rtl"] .admin-sidebar {
+    right: 0;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1); /* سایه به سمت چپ */
+}
+.admin-sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.admin-sidebar ul li {
+    padding: 15px 20px;
+    border-bottom: 1px solid #2c3e50;
+}
+
+.admin-sidebar ul li a {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-sidebar ul li a:hover {
+    background-color: #2c3e50;
+    padding-left: 25px; /* انیمیشن برای حالت LTR */
+}
+.admin-sidebar ul li a.active {
+    background-color: #2c3e50;
+    font-weight: bold;
+    border-left: 4px solid #3498db; /* در حالت LTR */
+}
+
+html[dir="rtl"] .admin-sidebar ul li a.active {
+    border-left: none;
+    border-right: 4px solid #3498db; /* در حالت RTL */
+}
+/* Main Content */
+.admin-content {
+    padding: 80px 20px 20px;
+    flex: 1;
+}
+/* حالت LTR: فاصله از سمت چپ */
+html:not([dir="rtl"]) .admin-content {
+    margin-left: 250px;
+}
+
+/* حالت RTL: فاصله از سمت راست */
+html[dir="rtl"] .admin-content {
+    margin-right: 250px;
+}
+.admin-section {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+}
+
+.admin-section h3 {
+    margin-top: 0;
+    color: #2c3e50;
+    border-bottom: 2px solid #2c3e50;
+    padding-bottom: 10px;
+}
+.admin-section form input[type="text"] {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 200px;
+    margin-right: 10px;
+}
+
+html[dir="rtl"] .admin-section form input[type="text"] {
+    margin-right: 0;
+    margin-left: 10px;
+}
+
+.admin-section form button {
+    padding: 8px 15px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.admin-section form button:hover {
+    background-color: #2980b9;
+}
+.admin-section form label {
+    margin-right: 10px;
+}
+
+html[dir="rtl"] .admin-section form label {
+    margin-right: 0;
+    margin-left: 10px;
+}
+
+/* Table Styles */
+.foods-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.foods-table th,
+.foods-table td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    font-size: 0.9rem; /* کاهش اندازه فونت */
+}
+html[dir="rtl"] .foods-table th,
+html[dir="rtl"] .foods-table td {
+    text-align: right;
+}
+.foods-table th {
+    background-color: #2c3e50;
+    color: white;
+}
+
+.foods-table tr:hover {
+    background-color: #f9f9f9;
+}
+.foods-table tr.pending {
+    background-color: #fff3cd;
+}
+
+.foods-table tr.confirmed {
+    background-color: #d4edda;
+}
+
+.foods-table tr.preparing {
+    background-color: #cce5ff;
+}
+
+.foods-table tr.canceled {
+    background-color: #f8d7da;
+}
+
+.foods-table tr.serving {
+    background-color: #d1ecf1;
+}
+
+.foods-table tr.completed {
+    background-color: #e2e3e5;
+}
+.foods-table .button,
+.foods-table .delete-btn {
+    padding: 8px 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    margin-right: 5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+html[dir="rtl"] .foods-table .button,
+html[dir="rtl"] .foods-table .delete-btn {
+    margin-right: 0;
+    margin-left: 5px;
+
+.foods-table .button {
+    background-color: #3498db;
+    color: white;
+}
+
+.foods-table .button:hover {
+    background-color: #2980b9;
+}
+
+.foods-table .delete-btn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.foods-table .delete-btn:hover {
+    background-color: #c0392b;
+}
+.foods-table select {
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+    cursor: pointer;
+}
+
+.foods-table select:hover {
+    background-color: #ececec;
+}
+.foods-table tr {
+    height: 40px; /* تنظیم ارتفاع ثابت برای هر سطر */
+}
+/* ✅ استایل منوی پایین برای موبایل */
+.menu-bar {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	background: #ffffff;
+	display: none;
+	justify-content: space-around;
+	padding: 5px 0;
+	box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+	z-index: 1000; /* ⬅ مقدار زیاد که منو همیشه روی همه چیز باشد */
+}
+
+.menu-bar a {
+	text-decoration: none;
+	color: #666;
+	font-size: 10px;
+	text-align: center;
+	flex: 1;
+	position: relative;
+	transition: all 0.3s ease;
+}
+
+.menu-bar a i {
+	font-size: 22px;
+	display: block;
+	margin-bottom: 0px;
+}
+
+.cart-badge {
+	position: absolute;
+	top: 0;
+	right: 15px;
+	background: red;
+	color: white;
+	font-size: 10px;
+	width: 16px;
+	height: 16px;
+	line-height: 18px;
+	text-align: center;
+	border-radius: 50%;
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+/* ✅ نمایش منوی پایین در موبایل و تبلت */
+@media (max-width: 1000px) {
+	.desktop-menu {
+		display: none;
+	}
+
+	.menu-bar {
+		display: flex;
+	}
+}
+@media (max-width: 500px) {
+.navbar {
+		display: none;
+	}
+}
+
+
+
+/* Form Styles */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+form label {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+form input,
+form textarea,
+form select {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+form textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+form button {
+    padding: 10px;
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+form button:hover {
+    background-color: #27ae60;
+}
+
+/* Alert Styles */
+.alert {
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.cancel-btn {
+    background-color: #e74c3c; /* رنگ قرمز برای دکمه انصراف */
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.cancel-btn:hover {
+    background-color: #c0392b;
+}
+* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+	}
+
+        .desktop-menu a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            font-size: 16px;
+        }
+
+.cart-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.cart-table th, .cart-table td {
+    padding: 10px;
+    text-align: right; /* برای RTL */
+    border-bottom: 1px solid var(--border-color);
+}
+
+[dir="rtl"] .cart-table th, [dir="rtl"] .cart-table td {
+    text-align: right;
+}
+
+.cart-table th {
+    background-color: var(--table-header-bg);
+    color: var(--card-title);
+}
+
+.cart-table td {
+    color: var(--card-text);
+}
+.cart-table .delete-btn {
+    background-color: var(--error-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+.cart-table .delete-btn:hover {
+    background-color: #c82333;
+}

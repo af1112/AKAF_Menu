@@ -1,181 +1,313 @@
-@media (max-width: 768px) {
-	.admin-sidebar{
-		display: block;
-		position: fixed;
-		bottom: 0;
-		width: 100%;
-		height: 4%;
-		background:; 
-		border-top: 1px solid #ccc;
-		box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
-		text-align: center;
-		padding: 10px 0;
-		top: 770px;
-		
-	}
-	.admin-sidebar ul {
-		list-style: none;
-		padding: 0;
-		margin: 0;
-		display: flex;
-		justify-content: space-around;
-	}
-.admin-body {
-    font-family: 'Noto Sans Arabic', sans-serif;
-    background-color: #f4f6f9;
-    min-height: 100vh;
-    display: flex;
+@media only screen and (max-width: 768px) {
+    /* Language Bar Styles */
+    .language-bar {
+        display: flex !important;
+        align-items: center !important;
+        background-color: #f8f9fa !important;
+        padding: 5px 5px !important; /* Reduced padding to save space */
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 1100 !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        box-sizing: border-box !important; /* Ensure padding doesn't cause overflow */
+        -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on mobile */
+    }
+
+    /* Adjust alignment based on text direction */
+    html[dir="ltr"] .language-bar {
+        justify-content: flex-end !important;
+    }
+
+    html[dir="rtl"] .language-bar {
+        justify-content: flex-start !important; /* Start from the right in RTL */
+    }
+
+    .language-bar a {
+        margin: 0 2px !important; /* Further reduced margin */
+        text-decoration: none !important;
+        display: inline-block !important; /* Ensure proper inline behavior */
+    }
+
+    .language-bar .flag-icon {
+        width: 18px !important;
+        height: 18px !important;
+        border-radius: 50% !important;
+        transition: transform 0.2s ease !important;
+    }
+
+    .language-bar a.active-lang .flag-icon {
+        transform: scale(1.2) !important;
+        border: 2px solid #2c3e50 !important;
+    }
+
+    /* Ensure the header stays fixed below the language bar */
+    .admin-header {
+        display: flex !important;
+        flex-direction: row !important;
+        position: fixed !important;
+        top: 28px !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        background-color: #2c3e50 !important;
+        color: white !important;
+        padding: 10px !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+        z-index: 1000 !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Adjust header elements for mobile */
+    .admin-header h1 {
+        font-size: 1rem !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 40% !important;
+    }
+
+    /* Ensure header controls remain horizontal but don't overflow */
+    .admin-header .controls {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 8px !important;
+        align-items: center !important;
+        max-width: 60% !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+    }
+
+    /* Adjust controls for smaller screens */
+    .admin-header .controls a {
+        font-size: 0.8rem !important;
+        padding: 4px !important;
+    }
+
+    /* Ensure the sidebar stays fixed at the bottom */
+    .admin-sidebar {
+        display: block !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        top: auto !important;
+        left: 0 !important;
+        right: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        background-color: #34495e !important;
+        box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1) !important;
+        z-index: 1000 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Make the sidebar list display as a horizontal flexbox */
+    .admin-sidebar ul {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-around !important;
+        align-items: center !important;
+        margin: 0 !important;
+        padding: 5px 0 !important;
+        list-style: none !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+    }
+
+    /* Style each menu item */
+    .admin-sidebar ul li {
+        flex: 1 !important;
+        min-width: 50px !important;
+        text-align: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-bottom: none !important;
+        position: relative !important;
+    }
+
+    /* Style the links inside the menu items */
+    .admin-sidebar ul li a {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        padding: 10px 5px !important;
+        text-decoration: none !important;
+        color: white !important;
+        transition: background-color 0.3s ease !important;
+    }
+
+    /* Hide the menu text in mobile view */
+    .admin-sidebar ul li a .menu-text {
+        display: none !important;
+    }
+
+    /* Remove the padding-left animation on hover for mobile */
+    .admin-sidebar ul li a:hover {
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+        background-color: #2c3e50 !important;
+    }
+
+    /* Highlight active menu item */
+    .admin-sidebar ul li a.active {
+        background-color: #2c3e50 !important;
+        font-weight: bold !important;
+        border-left: none !important;
+        border-right: none !important;
+    }
+
+    /* Style the icons */
+    .admin-sidebar ul li a i {
+        font-size: 18px !important;
+        margin-bottom: 0 !important;
+        margin-right: 0 !important;
+        margin-left: 0 !important;
+    }
+
+    /* Style the unread count badge for mobile */
+    .admin-sidebar ul li .sidebar-unread-count {
+        display: inline-block !important;
+        min-width: 16px !important;
+        height: 16px !important;
+        background-color: #dc3545 !important;
+        color: white !important;
+        border-radius: 50% !important;
+        text-align: center !important;
+        line-height: 16px !important;
+        font-size: 10px !important;
+        position: absolute !important;
+        top: 5px !important;
+    }
+
+    /* Adjust badge position based on text direction in mobile */
+    html[dir="ltr"] .admin-sidebar ul li .sidebar-unread-count {
+        right: 5px !important;
+        left: auto !important;
+    }
+
+    html[dir="rtl"] .admin-sidebar ul li .sidebar-unread-count {
+        left: 5px !important;
+        right: auto !important;
+    }
+
+    /* Ensure the main content doesn't overlap with the header and bottom menu */
+    .admin-content {
+        padding-top: 88px !important;
+        padding-bottom: 70px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Adjust the table to prevent horizontal scroll on the entire page */
+    .foods-table {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        display: block !important;
+    }
+
+    /* Reduce table column padding and font size for mobile */
+    .foods-table th,
+    .foods-table td {
+        padding: 5px !important;
+        font-size: 0.75rem !important;
+        white-space: nowrap !important;
+    }
+
+    /* Ensure buttons in the table don't take too much space */
+    .foods-table .button,
+    .foods-table .delete-btn {
+        padding: 5px 8px !important;
+        font-size: 0.7rem !important;
+    }
 }
 
-.admin-header {
-    background-color: #2c3e50; /* رنگ آبی تیره برای هدر */
-    color: white;
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
+/* Desktop view adjustments */
+@media only screen and (min-width: 769px) {
+    /* Show the menu text in desktop */
+    .admin-sidebar ul li a .menu-text {
+        display: inline !important;
+    }
+
+    /* Style the unread count badge for desktop */
+    .admin-sidebar ul li .sidebar-unread-count {
+        display: inline-block !important;
+        min-width: 20px !important;
+        height: 20px !important;
+        background-color: #dc3545 !important;
+        color: white !important;
+        border-radius: 50% !important;
+        text-align: center !important;
+        line-height: 20px !important;
+        font-size: 12px !important;
+        margin-left: 5px !important;
+        position: static !important;
+    }
+
+    /* Adjust badge position based on text direction in desktop */
+    html[dir="ltr"] .admin-sidebar ul li .sidebar-unread-count {
+        margin-left: 5px !important;
+        margin-right: 0 !important;
+    }
+
+    html[dir="rtl"] .admin-sidebar ul li .sidebar-unread-count {
+        margin-right: 5px !important;
+        margin-left: 0 !important;
+    }
+
+    /* Adjust admin-content padding for desktop */
+    .admin-content {
+        padding-top: 94px !important;
+    }
 }
 
-.admin-header h1 {
-    margin: 0;
-    font-size: 1.5rem;
-}
+@media only screen and (max-width: 768px) {
+    /* Styles for edit_food page in mobile */
+    .page-edit_food .admin-section {
+        padding: 15px !important;
+        margin: 5px !important;
+    }
 
-.admin-header .controls {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-}
+    .page-edit_food .admin-section form {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 15px !important;
+    }
 
-.admin-header .controls select,
-.admin-header .controls a {
-    color: white;
-    text-decoration: none;
-    font-size: 0.9rem;
-}
+    .page-edit_food .admin-section .full-width {
+        width: 100% !important;
+    }
 
-.admin-header .controls select {
-    background-color: #34495e;
-    border: none;
-    padding: 5px;
-    border-radius: 5px;
-    color: white;
-}
+    .page-edit_food .admin-section input[type="text"],
+    .page-edit_food .admin-section input[type="number"],
+    .page-edit_food .admin-section textarea,
+    .page-edit_food .admin-section select,
+    .page-edit_food .admin-section input[type="file"] {
+        font-size: 14px !important;
+        padding: 8px !important;
+    }
 
-.admin-header .controls a:hover {
-    color: #bdc3c7;
-}
+    .page-edit_food .admin-section textarea {
+        height: 100px !important;
+    }
 
-.admin-header .controls i {
-    margin-right: 5px;
-}
+    .page-edit_food .admin-section .button-group {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
 
-/* Sidebar */
-
-/* حالت LTR: سایدبار در سمت چپ */
-html:not([dir="rtl"]) .admin-sidebar {
-    left: 0;
-}
-
-/* حالت RTL: سایدبار در سمت راست */
-html[dir="rtl"] .admin-sidebar {
-    right: 0;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1); /* سایه به سمت چپ */
-}
-
-.admin-sidebar ul li {
-    padding: 15px 20px;
-    border-bottom: 1px solid #2c3e50;
-}
-
-.admin-sidebar ul li a {
-    color: white;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.admin-sidebar ul li a:hover {
-    background-color: #2c3e50;
-    padding-left: 25px; /* انیمیشن برای حالت LTR */
-}
-.admin-sidebar ul li a.active {
-    background-color: #2c3e50;
-    font-weight: bold;
-    border-left: 4px solid #3498db; /* در حالت LTR */
-}
-
-html[dir="rtl"] .admin-sidebar ul li a.active {
-    border-left: none;
-    border-right: 4px solid #3498db; /* در حالت RTL */
-}
-/* Main Content */
-.admin-content {
-    padding: 80px 20px 20px;
-    flex: 1;
-}
-/* حالت LTR: فاصله از سمت چپ */
-html:not([dir="rtl"]) .admin-content {
-    margin-left: 10px;
-}
-
-/* حالت RTL: فاصله از سمت راست */
-html[dir="rtl"] .admin-content {
-    margin-right: 250px;
-}
-.admin-section {
-    background-color: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    margin-bottom: 20px;
-	margin-right: -250px;
-}
-
-.admin-section h3 {
-    margin-top: 0;
-    color: #2c3e50;
-    border-bottom: 2px solid #2c3e50;
-    padding-bottom: 10px;
-}
-.admin-section form input[type="text"] {
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    width: 200px;
-    margin-right: 10px;
-}
-
-html[dir="rtl"] .admin-section form input[type="text"] {
-    margin-right: 0;
-    margin-left: 10px;
-}
-
-.admin-section form button {
-    padding: 8px 15px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.admin-section form button:hover {
-    background-color: #2980b9;
-}
-.admin-section form label {
-    margin-right: 10px;
-}
-
-html[dir="rtl"] .admin-section form label {
-    margin-right: 0;
-    margin-left: 10px;
-}
+    .page-edit_food .admin-section button,
+    .page-edit_food .admin-section .button {
+        width: 100% !important;
+        padding: 10px !important;
+        font-size: 14px !important;
+    }
 }

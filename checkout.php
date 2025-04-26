@@ -20,6 +20,17 @@ if (isset($_GET['remove_item']) && isset($_GET['food_id']) && isset($_GET['order
     $stmt_remove = $conn->prepare("DELETE FROM order_items WHERE order_id = ? AND food_id = ?");
     $stmt_remove->bind_param("ii", $order_id_to_remove, $food_id_to_remove);
     $stmt_remove->execute();
+    // به‌روزرسانی جمع‌ها پس از حذف
+    $stmt_items = $conn->prepare("SELECT SUM(oi.price * oi.quantity) AS total FROM order_items oi WHERE oi.order_id = ?");
+    $stmt_items->bind_param("i", $order_id_to_remove);
+    $stmt_items->execute();
+    $result = $stmt_items->get_result()->fetch_assoc();
+    $new_total = $result['total'] ?? 0;
+    $new_vat = $apply_vat ? ($new_total * $vat_rate) : 0;
+    $new_grand_total = $new_total + $new_vat;
+    $stmt_update_order = $conn->prepare("UPDATE orders SET total_price = ?, vat_amount = ?, grand_total = ? WHERE id = ?");
+    $stmt_update_order->bind_param("dddi", $new_total, $new_vat, $new_grand_total, $order_id_to_remove);
+    $stmt_update_order->execute();
     header("Location: checkout.php?order_id=" . $order_id_to_remove);
     exit();
 }
@@ -37,6 +48,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_quantity'])) {
         $stmt_remove->bind_param("ii", $order_id, $food_id);
         $stmt_remove->execute();
     }
+    // به‌روزرسانی جمع‌ها پس از تغییر تعداد
+    $stmt_items = $conn->prepare("SELECT SUM(oi.price * oi.quantity) AS total FROM order_items oi WHERE oi.order_id = ?");
+    $stmt_items->bind_param("i", $order_id);
+    $stmt_items->execute();
+    $result = $stmt_items->get_result()->fetch_assoc();
+    $new_total = $result['total'] ?? 0;
+    $new_vat = $apply_vat ? ($new_total * $vat_rate) : 0;
+    $new_grand_total = $new_total + $new_vat;
+    $stmt_update_order = $conn->prepare("UPDATE orders SET total_price = ?, vat_amount = ?, grand_total = ? WHERE id = ?");
+    $stmt_update_order->bind_param("dddi", $new_total, $new_vat, $new_grand_total, $order_id);
+    $stmt_update_order->execute();
     header("Location: checkout.php?order_id=" . $order_id);
     exit();
 }
@@ -50,10 +72,12 @@ $stmt->execute();
 $currency_Decimal = $stmt->get_result()->fetch_assoc()['value'] ?? '3';
 $stmt = $conn->prepare("SELECT value FROM settings WHERE `key` = 'vat_rate'");
 $stmt->execute();
-$vat_rate = floatval($stmt->get_result()->fetch_assoc()['value'] ?? 0.0);
+$vat_rate_result = $stmt->get_result()->fetch_assoc();
+$vat_rate = $vat_rate_result ? floatval($vat_rate_result['value']) : 0.0;
 $stmt = $conn->prepare("SELECT value FROM settings WHERE `key` = 'apply_vat'");
 $stmt->execute();
-$apply_vat = intval($stmt->get_result()->fetch_assoc()['value'] ?? 0);
+$apply_vat_result = $stmt->get_result()->fetch_assoc();
+$apply_vat = $apply_vat_result ? intval($apply_vat_result['value']) : 0;
 
 // Manage theme
 if (!isset($_SESSION['theme'])) {
@@ -104,7 +128,7 @@ if (!$order) {
 }
 
 $total_price = $order['total_price'] ?? 0;
-$vat_amount = $order['vat_amount'] ?? 0;
+$vat_amount = $apply_vat ? ($total_price * $vat_rate) : 0;
 $grand_total = $order['grand_total'] ?? 0;
 $order_status = $order['status'] ?? 'Pending';
 $waiter_id = $order['waiter_id'] ?? null;
@@ -238,7 +262,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['place_order'])) {
 }
 
 // دریافت آیتم‌های سفارش
-$stmt_items = $conn->prepare("SELECT oi.id AS order_item_id, oi.food_id, oi.quantity, oi.price, oi.comment, f.name_" . $_SESSION['lang'] . " AS name, f.main_image FROM order_items oi JOIN foods f ON oi.food_id = f.id WHERE oi.order_id = ?");$stmt_items->bind_param("i", $order_id);
+$stmt_items = $conn->prepare("SELECT oi.id AS order_item_id, oi.food_id, oi.quantity, oi.price, oi.comment, f.name_" . $_SESSION['lang'] . " AS name, f.main_image FROM order_items oi JOIN foods f ON oi.food_id = f.id WHERE oi.order_id = ?");
+$stmt_items->bind_param("i", $order_id);
 $stmt_items->execute();
 $order_items = $stmt_items->get_result()->fetch_all(MYSQLI_ASSOC);
 ?>
@@ -251,14 +276,11 @@ $order_items = $stmt_items->get_result()->fetch_all(MYSQLI_ASSOC);
     <title><?php echo $lang['checkout'] ?? 'Checkout'; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <script src="https://unpkg.com/swiper@8/swiper-bundle.min.js"></script>
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <style>
-/* تعریف فونت - اطمینان از وجود فایل‌ها */
-
 * {
     margin: 0;
     padding: 0;
@@ -268,6 +290,8 @@ $order_items = $stmt_items->get_result()->fetch_all(MYSQLI_ASSOC);
 body {
     direction: <?php echo $direction; ?>;
     padding-bottom: 70px; /* برای منوی پایین */
+	overflow-x: hidden;
+
 }
 
 .container {
@@ -296,7 +320,10 @@ body {
 }
 .cart-table td {
     height: 110px;
-    vertical-align: top;
+	vertical-align: middle; /* تغییر از top به middle */
+    padding: 12px;
+    text-align: <?php echo $is_rtl ? 'right' : 'left'; ?>;
+    border-bottom: 1px solid #ddd;
 }
 .cart-table th {
     background: #f8f8f8;
@@ -311,7 +338,10 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-	flex-wrap: nowrap; /* جلوگیری از شکستن خط */
+    flex-wrap: nowrap;
+    flex-direction: <?php echo $is_rtl ? 'row-reverse' : 'row'; ?>;
+	width: 100%; /* برای اطمینان از اینکه کل عرض رو بگیره */
+	height: 100%; /* برای اطمینان از اینکه کل ارتفاع td رو بگیره */
 }
 
 .item-name img {
@@ -319,20 +349,30 @@ body {
     height: 50px;
     object-fit: cover;
     border-radius: 5px;
-	flex-shrink: 0;
-    position: <?php echo $is_rtl ? 'flex-end' : 'flex-start'; ?>;
+    flex-shrink: 0;
+	align-self: center; /* برای اطمینان از وسط‌چین شدن تصویر */
 }
+
 .item-name div {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+	display: flex;
+    flex-direction: column; /* به جای row-reverse، از column استفاده می‌کنیم */
+    align-items: <?php echo $is_rtl ? 'flex-end' : 'flex-start'; ?>;
+	justify-content: center; /* برای وسط‌چین کردن عمودی داخل div */
+    flex: 1; /* برای اینکه div کل فضای باقی‌مونده رو بگیره */
 }
+
 .item-name a {
     color: #007bff;
     text-decoration: none;
     font-weight: 500;
+	text-align: right;
+    direction: rtl; /* اضافه کردن این خط */
+    display: block;
 }
-
+.item-name a:first-child {
+    text-align: <?php echo $is_rtl ? 'right' : 'left'; ?>;
+    width: 100%; /* برای اطمینان از اینکه متن کل عرض رو بگیره */
+}
 .item-name a:hover {
     text-decoration: underline;
 }
@@ -411,7 +451,6 @@ body {
     width: 100%;
     max-width: 300px;
     margin-bottom: 5px;
-
 }
 
 .total.rtl {
@@ -497,13 +536,47 @@ body {
 
 .delivery-carousel {
     width: 100%;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    position: relative;
     padding: 10px 0;
     margin-bottom: 20px;
-    position: relative;
-    z-index: 10;
-    overflow: visible;
+}
+.delivery-items {
+    display: inline-flex;
+    gap: 10px;
+    padding: 0 10px;
 }
 
+.delivery-option {
+    flex: 0 0 120px;
+    height: 120px;
+    background: #f8f8f8;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: background 0.3s ease;
+}
+
+.delivery-option.active {
+    background: #2c3e50;
+    color: #fff;
+}
+
+.delivery-option i {
+    font-size: 24px;
+    margin-bottom: 5px;
+}
+
+.delivery-option span {
+    font-size: 14px;
+}
 .delivery-carousel .swiper {
     width: 100%;
     display: flex;
@@ -514,7 +587,8 @@ body {
 .delivery-carousel .swiper-wrapper {
     display: flex;
     flex-direction: row;
-    width: auto;
+    justify-content: flex-start;
+    width: 100%;
 }
 
 .delivery-carousel .swiper-slide {
@@ -551,30 +625,32 @@ body {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-	display: felx;
+    display: flex;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     z-index: 20;
-	align-items: center;
+    align-items: center;
     justify-content: center;
 }
 
 .swiper-button-prev {
-    left: -10px;
+    left: 0;
 }
 
 .swiper-button-next {
-    right: -10px;
+    right: 0;
 }
 
 .swiper-button-prev:after, .swiper-button-next:after {
     font-size: 18px;
 }
+
 .swiper-button-prev i, .swiper-button-next i {
     font-size: 18px;
 }
+
 .map-container {
     display: none;
     margin-top: 10px;
@@ -673,17 +749,35 @@ body {
     }
 
     .cart-item-mobile .item-name {
-        font-size: 16px;
-        font-weight: bold;
-        margin-bottom: 10px;
-        display: flex;
-        flex-direction: column;
-        align-items: <?php echo $is_rtl ? 'flex-end' : 'flex-start'; ?>;
+	font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: <?php echo $is_rtl ? 'flex-end' : 'flex-start'; ?>;
+    width: 100%;
+	justify-content: center; /* برای متعادل کردن فاصله‌ها */
+    }
+	.cart-item-mobile .item-name div {
+		display: flex;
+		flex-direction: column;
+		align-items: <?php echo $is_rtl ? 'flex-end' : 'flex-start'; ?>;
+		width: 100%;
+	}
+	.cart-item-mobile .item-name a:first-child {
+		text-align: <?php echo $is_rtl ? 'right' : 'left'; ?>;
+		width: 100%;
+	}
+    .cart-item-mobile {
+        flex-direction: <?php echo $is_rtl ? 'row-reverse' : 'row'; ?>;
     }
 
     .cart-item-mobile .item-name a {
         color: #007bff;
         text-decoration: none;
+		text-align: right;
+		direction: rtl; /* اضافه کردن این خط */
+		display: block;
     }
 
     .cart-item-mobile .item-name a:hover {
@@ -695,6 +789,7 @@ body {
         height: 70px;
         margin-bottom: 10px;
         border-radius: 8px;
+	align-self: <?php echo $is_rtl ? 'flex-end' : 'flex-start'; ?>;
     }
 
     .cart-item-mobile .details-btn {
@@ -770,8 +865,26 @@ body {
         font-size: 15px;
     }
 
+.delivery-carousel {
+        padding: 5px 10px;
+    }
+
+    .delivery-option {
+        flex: 0 0 80px;
+        height: 100px;
+        border-radius: 8px;
+    }
+
+    .delivery-option i {
+        font-size: 20px;
+    }
+
+    .delivery-option span {
+        font-size: 12px;
+    }
+
     .delivery-carousel .swiper-slide {
-        flex: 0 0 100px;
+        flex: 0 0 80px;
         height: 100px;
         border-radius: 8px;
     }
@@ -790,11 +903,11 @@ body {
     }
 
     .swiper-button-prev {
-        left: -15px;
+        left: 0;
     }
 
     .swiper-button-next {
-        right: -15px;
+        right: 0;
     }
 
     .extra-fields .form-group {
@@ -812,6 +925,7 @@ body {
         padding: 8px;
     }
 }
+
 @media (max-width: 500px) {
     .navbar {
         display: none;
@@ -871,8 +985,25 @@ body {
         font-size: 16px;
     }
 
+.delivery-carousel {
+        padding: 5px 5px;
+    }
+
+    .delivery-option {
+        flex: 0 0 70px;
+        height: 90px;
+    }
+
+    .delivery-option i {
+        font-size: 18px;
+    }
+
+    .delivery-option span {
+        font-size: 11px;
+    }
+
     .delivery-carousel .swiper-slide {
-        flex: 0 0 90px;
+        flex: 0 0 70px;
         height: 90px;
     }
 
@@ -890,11 +1021,11 @@ body {
     }
 
     .swiper-button-prev {
-        left: -10px;
+        left: 0;
     }
 
     .swiper-button-next {
-        right: -10px;
+        right: 0;
     }
 
     .form-control {
@@ -927,7 +1058,6 @@ body {
     .button { width: 100%; }
     .form-field { font-size: 16px; }
 }
-
     </style>
 </head>
 
@@ -959,11 +1089,11 @@ body {
                             <?php endif; ?>
                         </li>
                     <?php endif; ?>
-					<li class="nav-item">
-						<a class="nav-link" href="index.php">
-							<i class="fas fa-bars"></i> <?php echo $lang['home'] ?? 'Home'; ?>
-						</a>
-					</li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.php">
+                            <i class="fas fa-bars"></i> <?php echo $lang['home'] ?? 'Home'; ?>
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="checkout.php?theme=<?php echo $theme === 'light' ? 'dark' : 'light'; ?>&order_id=<?php echo $order_id; ?>">
                             <i class="fas <?php echo $theme === 'light' ? 'fa-moon' : 'fa-sun'; ?>"></i>
@@ -1023,584 +1153,531 @@ body {
     </div>
 
     <div class="container">
-		<div class="checkout" data-aos="fade-up">
-			<h2><?php echo $lang['order_details'] ?? 'Order Details'; ?></h2>
-			<?php if (empty($order_items)): ?>
-				<p><?php echo $lang['cart_empty'] ?? 'Your cart is empty.'; ?></p>
-				<a href="menu.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> <?php echo $lang['continue_shopping'] ?? 'Continue Shopping'; ?></a>
-			<?php else: ?>
-				<?php if (isset($error)): ?>
-					<div class="alert alert-danger"><?php echo $error; ?></div>
-				<?php endif; ?>
-				<?php if (isset($discount_error)): ?>
-					<div class="alert alert-warning"><?php echo $discount_error; ?></div>
-				<?php endif; ?>
+        <div class="checkout" data-aos="fade-up">
+            <h2><?php echo $lang['order_details'] ?? 'Order Details'; ?></h2>
+            <?php if (empty($order_items)): ?>
+                <p><?php echo $lang['cart_empty'] ?? 'Your cart is empty.'; ?></p>
+                <a href="menu.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> <?php echo $lang['continue_shopping'] ?? 'Continue Shopping'; ?></a>
+            <?php else: ?>
+                <?php if (isset($error)): ?>
+                    <div class="alert alert-danger"><?php echo $error; ?></div>
+                <?php endif; ?>
+                <?php if (isset($discount_error)): ?>
+                    <div class="alert alert-warning"><?php echo $discount_error; ?></div>
+                <?php endif; ?>
 
-				<section class="cart-summary">
-					<form method="POST" action="checkout.php?order_id=<?php echo $order_id; ?>">
-						<?php if (!$is_mobile): ?>
-							<!-- نمایش جدول برای دسکتاپ -->
-							<table class="cart-table">
-								<thead>
-									<tr>
-										<th><?php echo $lang['item'] ?? 'Item'; ?></th>
-										<th><?php echo $lang['price'] ?? 'Price'; ?></th>
-										<th><?php echo $lang['quantity'] ?? 'Quantity'; ?></th>
-										<th><?php echo $lang['subtotal'] ?? 'Subtotal'; ?></th>
-										<th class="special-request"><?php echo $lang['Special_Request'] ?? 'Special Request'; ?></th>
-										<th><?php echo $lang['actions'] ?? 'Actions'; ?></th>
-									</tr>
-								</thead>
-								<tbody>
-									<?php foreach ($order_items as $item): ?>
-										<tr>
-											<td class="item-name">
-												<?php if (!empty($item['main_image'])): ?>
-													<img src="<?php echo htmlspecialchars($item['main_image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
-												<?php endif; ?>
-												<div>
-													<a href="food_detail.php?id=<?php echo $item['food_id']; ?>"><?php echo htmlspecialchars($item['name']); ?></a>
-													<a href="food_detail.php?id=<?php echo $item['food_id']; ?>" class="btn btn-primary btn-sm mt-1"><?php echo $lang['details'] ?? 'Details'; ?></a>
-												</div>
-											</td>
-											<td><?php echo number_format($item['price'], $currency_Decimal); ?> <?php echo $currency; ?></td>
-											<td>
-												<?php if ($order_status !== 'Preparing'): ?>
-													<div class="quantity-control">
-														<button type="submit" name="update_quantity" onclick="this.form.quantity.value--;"><i class="fas fa-minus"></i></button>
-														<input type="number" name="quantity" id="quantity-<?php echo $item['order_item_id']; ?>" value="<?php echo $item['quantity']; ?>" min="0" readonly>
-														<input type="hidden" name="food_id" value="<?php echo $item['food_id']; ?>">
-														<button type="submit" name="update_quantity" onclick="this.form.quantity.value++;"><i class="fas fa-plus"></i></button>
-													</div>
-												<?php else: ?>
-													<?php echo $item['quantity']; ?>
-												<?php endif; ?>
-											</td>
-											<td><?php echo number_format($item['price'] * $item['quantity'], $currency_Decimal); ?> <?php echo $currency; ?></td>
-											<td class="comment-column special-request">
-												<textarea name="comments[<?php echo $item['food_id']; ?>]" <?php echo $order_status === 'Preparing' ? 'disabled' : ''; ?>><?php echo htmlspecialchars($item['comment'] ?? ''); ?></textarea>
-											</td>
-											<td>
-												<?php if ($order_status !== 'Preparing'): ?>
-													<a href="checkout.php?remove_item=1&food_id=<?php echo $item['food_id']; ?>&order_id=<?php echo $order_id; ?>" class="btn btn-danger"><i class="fas fa-trash"></i></a>
-												<?php endif; ?>
-											</td>
-										</tr>
-									<?php endforeach; ?>
-								</tbody>
-							</table>
-						<?php else: ?>
-							<!-- نمایش کارت‌ها برای موبایل -->
-							<div class="cart-table-mobile">
-								<?php foreach ($order_items as $item): ?>
-									<div class="cart-item-mobile">
-										<div class="item-name">
-											<?php if (!empty($item['main_image'])): ?>
-												<img src="<?php echo htmlspecialchars($item['main_image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
-											<?php endif; ?>
-											<div>
-												<a href="food_detail.php?id=<?php echo $item['food_id']; ?>"><?php echo htmlspecialchars($item['name']); ?></a>
-												<a href="food_detail.php?id=<?php echo $item['food_id']; ?>" class="details-btn"><?php echo $lang['details'] ?? 'Details'; ?></a>
-											</div>
-										</div>
-										<div class="item-detail">
-											<span><?php echo $lang['price'] ?? 'Price'; ?>:</span>
-											<span><?php echo number_format($item['price'], $currency_Decimal); ?> <?php echo $currency; ?></span>
-										</div>
-										<div class="item-detail">
-											<span><?php echo $lang['quantity'] ?? 'Quantity'; ?>:</span>
-											<?php if ($order_status !== 'Preparing'): ?>
-												<div class="quantity-control">
-													<button type="submit" name="update_quantity" onclick="this.form.querySelector('#quantity-<?php echo $item['order_item_id']; ?>').value--;"><i class="fas fa-minus"></i></button>
-													<input type="number" name="quantity" id="quantity-<?php echo $item['order_item_id']; ?>" value="<?php echo $item['quantity']; ?>" min="0" readonly>
-													<input type="hidden" name="food_id" value="<?php echo $item['food_id']; ?>">
-													<button type="submit" name="update_quantity" onclick="this.form.querySelector('#quantity-<?php echo $item['order_item_id']; ?>').value++;"><i class="fas fa-plus"></i></button>
-												</div>
-											<?php else: ?>
-												<span><?php echo $item['quantity']; ?></span>
-											<?php endif; ?>
-										</div>
-										<div class="item-detail">
-											<span><?php echo $lang['subtotal'] ?? 'Subtotal'; ?>:</span>
-											<span><?php echo number_format($item['price'] * $item['quantity'], $currency_Decimal); ?> <?php echo $currency; ?></span>
-										</div>
-										<div class="item-detail">
-											<span><?php echo $lang['Special_Request'] ?? 'Special Request'; ?>:</span>
-										</div>
-										<textarea name="comments[<?php echo $item['food_id']; ?>]" <?php echo $order_status === 'Preparing' ? 'disabled' : ''; ?>><?php echo htmlspecialchars($item['comment'] ?? ''); ?></textarea>
-										<?php if ($order_status !== 'Preparing'): ?>
-											<a href="checkout.php?remove_item=1&food_id=<?php echo $item['food_id']; ?>&order_id=<?php echo $order_id; ?>" class="remove-btn">
-												<i class="fas fa-trash"></i> <?php echo $lang['remove'] ?? 'Remove'; ?>
-											</a>
-										<?php endif; ?>
-									</div>
-								<?php endforeach; ?>
-							</div>
-						<?php endif; ?>
+                <section class="cart-summary">
+                    <form method="POST" action="checkout.php?order_id=<?php echo $order_id; ?>">
+                        <?php if (!$is_mobile): ?>
+                            <!-- نمایش جدول برای دسکتاپ -->
+                            <table class="cart-table">
+                                <thead>
+                                    <tr>
+                                        <th><?php echo $lang['item'] ?? 'Item'; ?></th>
+                                        <th><?php echo $lang['price'] ?? 'Price'; ?></th>
+                                        <th><?php echo $lang['quantity'] ?? 'Quantity'; ?></th>
+                                        <th><?php echo $lang['subtotal'] ?? 'Subtotal'; ?></th>
+                                        <th class="special-request"><?php echo $lang['Special_Request'] ?? 'Special Request'; ?></th>
+                                        <th><?php echo $lang['actions'] ?? 'Actions'; ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($order_items as $item): ?>
+                                        <tr>
+                                            <td class="item-name">
+                                                <?php if (!empty($item['main_image'])): ?>
+                                                    <img src="<?php echo htmlspecialchars($item['main_image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
+                                                <?php endif; ?>
+                                                <div>
+                                                    <a href="food_detail.php?id=<?php echo $item['food_id']; ?>"><?php echo htmlspecialchars($item['name']); ?></a>
+                                                    <a href="food_detail.php?id=<?php echo $item['food_id']; ?>" class="btn btn-primary btn-sm mt-1"><?php echo $lang['details'] ?? 'Details'; ?></a>
+                                                </div>
+                                            </td>
+                                            <td><?php echo number_format($item['price'], $currency_Decimal); ?> <?php echo $currency; ?></td>
+                                            <td>
+                                                <?php if ($order_status !== 'Preparing'): ?>
+                                                    <div class="quantity-control">
+                                                        <button type="submit" name="update_quantity" onclick="this.form.quantity.value--;"><i class="fas fa-minus"></i></button>
+                                                        <input type="number" name="quantity" id="quantity-<?php echo $item['order_item_id']; ?>" value="<?php echo $item['quantity']; ?>" min="0" readonly>
+                                                        <input type="hidden" name="food_id" value="<?php echo $item['food_id']; ?>">
+                                                        <button type="submit" name="update_quantity" onclick="this.form.quantity.value++;"><i class="fas fa-plus"></i></button>
+                                                    </div>
+                                                <?php else: ?>
+                                                    <?php echo $item['quantity']; ?>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td><?php echo number_format($item['price'] * $item['quantity'], $currency_Decimal); ?> <?php echo $currency; ?></td>
+                                            <td class="comment-column special-request">
+                                                <textarea name="comments[<?php echo $item['food_id']; ?>]" <?php echo $order_status === 'Preparing' ? 'disabled' : ''; ?>><?php echo htmlspecialchars($item['comment'] ?? ''); ?></textarea>
+                                            </td>
+                                            <td>
+                                                <?php if ($order_status !== 'Preparing'): ?>
+                                                    <a href="checkout.php?remove_item=1&food_id=<?php echo $item['food_id']; ?>&order_id=<?php echo $order_id; ?>" class="btn btn-danger"><i class="fas fa-trash"></i></a>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php else: ?>
+                            <!-- نمایش کارت‌ها برای موبایل -->
+                            <div class="cart-table-mobile">
+                                <?php foreach ($order_items as $item): ?>
+                                    <div class="cart-item-mobile">
+                                        <div class="item-name">
+                                            <?php if (!empty($item['main_image'])): ?>
+                                                <img src="<?php echo htmlspecialchars($item['main_image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
+                                            <?php endif; ?>
+                                            <div>
+                                                <a href="food_detail.php?id=<?php echo $item['food_id']; ?>"><?php echo htmlspecialchars($item['name']); ?></a>
+                                                <a href="food_detail.php?id=<?php echo $item['food_id']; ?>" class="details-btn"><?php echo $lang['details'] ?? 'Details'; ?></a>
+                                            </div>
+                                        </div>
+                                        <div class="item-detail">
+                                            <span><?php echo $lang['price'] ?? 'Price'; ?>:</span>
+                                            <span><?php echo number_format($item['price'], $currency_Decimal); ?> <?php echo $currency; ?></span>
+                                        </div>
+                                        <div class="item-detail">
+                                            <span><?php echo $lang['quantity'] ?? 'Quantity'; ?>:</span>
+                                            <?php if ($order_status !== 'Preparing'): ?>
+                                                <div class="quantity-control">
+                                                    <button type="submit" name="update_quantity" onclick="this.form.querySelector('#quantity-<?php echo $item['order_item_id']; ?>').value--;"><i class="fas fa-minus"></i></button>
+                                                    <input type="number" name="quantity" id="quantity-<?php echo $item['order_item_id']; ?>" value="<?php echo $item['quantity']; ?>" min="0" readonly>
+                                                    <input type="hidden" name="food_id" value="<?php echo $item['food_id']; ?>">
+                                                    <button type="submit" name="update_quantity" onclick="this.form.querySelector('#quantity-<?php echo $item['order_item_id']; ?>').value++;"><i class="fas fa-plus"></i></button>
+                                                </div>
+                                            <?php else: ?>
+                                                <span><?php echo $item['quantity']; ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="item-detail">
+                                            <span><?php echo $lang['subtotal'] ?? 'Subtotal'; ?>:</span>
+                                            <span><?php echo number_format($item['price'] * $item['quantity'], $currency_Decimal); ?> <?php echo $currency; ?></span>
+                                        </div>
+                                        <div class="item-detail">
+                                            <span><?php echo $lang['Special_Request'] ?? 'Special Request'; ?>:</span>
+                                        </div>
+                                        <textarea name="comments[<?php echo $item['food_id']; ?>]" <?php echo $order_status === 'Preparing' ? 'disabled' : ''; ?>><?php echo htmlspecialchars($item['comment'] ?? ''); ?></textarea>
+                                        <?php if ($order_status !== 'Preparing'): ?>
+                                            <a href="checkout.php?remove_item=1&food_id=<?php echo $item['food_id']; ?>&order_id=<?php echo $order_id; ?>" class="remove-btn">
+                                                <i class="fas fa-trash"></i> <?php echo $lang['remove'] ?? 'Remove'; ?>
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
 
-						<div class="total <?php echo $is_rtl ? 'rtl' : 'ltr'; ?>">
-							<div class="summary-row">
-								<span class="label"><?php echo $lang['total'] ?? 'Total'; ?>:</span>
-								<span class="value"><?php echo number_format($total_price, $currency_Decimal); ?></span>
-								<span class="currency"><?php echo $currency; ?></span>
-							</div>
-							<div class="summary-row">
-								<span class="label">VAT (<?php echo $vat_rate * 100; ?>%):</span>
-								<span class="value"><?php echo number_format($vat_amount, $currency_Decimal); ?></span>
-								<span class="currency"><?php echo $currency; ?></span>
-							</div>
-							<?php if ($discount > 0): ?>
-								<div class="summary-row">
-									<span class="label"><?php echo $lang['discount'] ?? 'Discount'; ?>:</span>
-									<span class="value"><?php echo number_format($discount, $currency_Decimal); ?></span>
-									<span class="currency"><?php echo $currency; ?></span>
-								</div>
-							<?php endif; ?>
-							<div class="summary-row grand-total">
-								<span class="label"><?php echo $lang['grand_total'] ?? 'Grand Total'; ?>:</span>
-								<span class="value"><?php echo number_format($grand_total, $currency_Decimal); ?></span>
-								<span class="currency"><?php echo $currency; ?></span>
-							</div>
-						</div>
+                        <div class="total <?php echo $is_rtl ? 'rtl' : 'ltr'; ?>">
+                            <div class="summary-row">
+                                <span class="label"><?php echo $lang['total'] ?? 'Total'; ?>:</span>
+                                <span class="value"><?php echo number_format($total_price, $currency_Decimal); ?></span>
+                                <span class="currency"><?php echo $currency; ?></span>
+                            </div>
+                            <div class="summary-row">
+                                <span class="label">VAT (<?php echo $vat_rate * 100; ?>%):</span>
+                                <span class="value"><?php echo number_format($vat_amount, $currency_Decimal); ?></span>
+                                <span class="currency"><?php echo $currency; ?></span>
+                            </div>
+                            <?php if ($discount > 0): ?>
+                                <div class="summary-row">
+                                    <span class="label"><?php echo $lang['discount'] ?? 'Discount'; ?>:</span>
+                                    <span class="value"><?php echo number_format($discount, $currency_Decimal); ?></span>
+                                    <span class="currency"><?php echo $currency; ?></span>
+                                </div>
+                            <?php endif; ?>
+                            <div class="summary-row grand-total">
+                                <span class="label"><?php echo $lang['grand_total'] ?? 'Grand Total'; ?>:</span>
+                                <span class="value"><?php echo number_format($grand_total, $currency_Decimal); ?></span>
+                                <span class="currency"><?php echo $currency; ?></span>
+                            </div>
+                        </div>
 
-						<form method="POST" class="mt-3">
-							<label for ="discount-code"><?php echo $lang['discount_code'] ?? 'Discount Code'; ?>:</label>
-							<div class="input-group">
-								<input type="text" id="discount-code" name="discount_code" class="form-control" placeholder="<?php echo $lang['enter_code'] ?? 'Enter code'; ?>">
-								<button type="submit" name="apply_discount" class="btn btn-secondary"><?php echo $lang['apply'] ?? 'Apply'; ?></button>
-							</div>
-						</form>
+                        <form method="POST" class="mt-3">
+                            <label for ="discount-code"><?php echo $lang['discount_code'] ?? 'Discount Code'; ?>:</label>
+                            <div class="input-group">
+                                <input type="text" id="discount-code" name="discount_code" class="form-control" placeholder="<?php echo $lang['enter_code'] ?? 'Enter code'; ?>">
+                                <button type="submit" name="apply_discount" class="btn btn-secondary"><?php echo $lang['apply'] ?? 'Apply'; ?></button>
+                            </div>
+                        </form>
 
-						<?php if ($order_status === 'Pending'): ?>
-							<form method="POST" class="mt-3">
-								<h3><?php echo $lang['delivery_options'] ?? 'Delivery Options'; ?></h3>
-								<div class="delivery-carousel swiper" data-aos="fade-up" data-aos-delay="100" data-aos-duration="800">
-									<div class="swiper-wrapper">
-										<div class="swiper-slide delivery-option" data-value="dine-in">
+                        <?php if ($order_status === 'Pending'): ?>
+                            <form method="POST" class="mt-3">
+                                <h3><?php echo $lang['delivery_options'] ?? 'Delivery Options'; ?></h3>
+								<div class="delivery-carousel" data-aos="fade-up" data-aos-delay="100" data-aos-duration="800">
+									<div class="delivery-items">
+										<div class="delivery-option" data-value="dine-in">
 											<i class="fas fa-utensils"></i>
 											<span><?php echo $lang['dine_in'] ?? 'Dine-In'; ?></span>
 										</div>
-										<div class="swiper-slide delivery-option" data-value="delivery">
+										<div class="delivery-option" data-value="delivery">
 											<i class="fas fa-truck"></i>
 											<span><?php echo $lang['delivery'] ?? 'Delivery'; ?></span>
 										</div>
-										<div class="swiper-slide delivery-option" data-value="takeaway">
+										<div class="delivery-option" data-value="takeaway">
 											<i class="fas fa-shopping-bag"></i>
 											<span><?php echo $lang['takeaway'] ?? 'Takeaway / Pick-up'; ?></span>
 										</div>
-										<div class="swiper-slide delivery-option" data-value="drive-thru">
+										<div class="delivery-option" data-value="drive-thru">
 											<i class="fas fa-car"></i>
 											<span><?php echo $lang['drive_thru'] ?? 'Drive-Thru'; ?></span>
 										</div>
-										<div class="swiper-slide delivery-option" data-value="contactless">
+										<div class="delivery-option" data-value="contactless">
 											<i class="fas fa-box"></i>
 											<span><?php echo $lang['contactless_delivery'] ?? 'Contactless Delivery'; ?></span>
 										</div>
-										<div class="swiper-slide delivery-option" data-value="curbside">
+										<div class="delivery-option" data-value="curbside">
 											<i class="fas fa-parking"></i>
 											<span><?php echo $lang['curbside_pickup'] ?? 'Curbside Pickup'; ?></span>
 										</div>
 									</div>
-									<div class="swiper-button-prev"><i class="fas fa-arrow-left"></i></div>
-									<div class="swiper-button-next"><i class="fas fa-arrow-right"></i></div>
 								</div>
-								<input type="hidden" name="delivery_type" id="delivery_type" required>
+                                <input type="hidden" name="delivery_type" id="delivery_type" required>
 
-								<div id="dine-in-fields" class="extra-fields">
-									<label for="table-number"><?php echo $lang['table_number'] ?? 'Table Number'; ?>:</label>
-									<input type="text" id="table-number" name="table_number" class="form-control" required>
-								</div>
-								<div id="delivery-fields" class="extra-fields">
-									<div class="form-group">
-										<label><?php echo $lang['address'] ?? 'Address'; ?>:</label>
-										<input type="text" name="address" class="form-control" required>
-									</div>
-									<div class="form-group">
-										<label><?php echo $lang['location'] ?? 'Location'; ?>:</label>
-										<div id="map-delivery" class="map-container"></div>
-										<input type="hidden" name="latitude" id="latitude-delivery">
-										<input type="hidden" name="longitude" id="longitude-delivery">
-									</div>
-									<div class="form-group">
-										<label><?php echo $lang['contact_number'] ?? 'Contact Number'; ?>:</label>
-										<input type="tel" name="contact_number" class="form-control" required>
-									</div>
-									<div class="form-group">
-										<label><?php echo $lang['recipient_name'] ?? 'Recipient Name'; ?>:</label>
-										<input type="text" name="recipient_name" class="form-control" required>
-									</div>
-									<div class="form-group">
-										<label><?php echo $lang['preferred_time'] ?? 'Preferred Delivery Time'; ?>:</label>
-										<input type="datetime-local" name="preferred_time" class="form-control" required>
-									</div>
-									<div class="form-group">
-										<label><?php echo $lang['payment_method'] ?? 'Payment Method'; ?>:</label>
-										<select name="payment_method" class="form-control" required>
-											<option value="cash"><?php echo $lang['cash'] ?? 'Cash'; ?></option>
-											<option value="card"><?php echo $lang['card'] ?? 'Card'; ?></option>
-											<option value="bank_transfer"><?php echo $lang['bank_transfer'] ?? 'Bank Transfer'; ?></option>
-										</select>
-									</div>
-								</div>
-								<div id="takeaway-fields" class="extra-fields">
-									<div class="form-group">
-										<label><?php echo $lang['contact_number'] ?? 'Contact Number'; ?>:</label>
-										<input type="tel" name="contact_number" class="form-control" required>
-									</div>
-									<div class="form-group">
-										<label><?php echo $lang['recipient_name'] ?? 'Recipient Name'; ?>:</label>
-										<input type="text" name="recipient_name" class="form-control" required>
-									</div>
-									<div class="form-group">
-										<label><?php echo $lang['preferred_time'] ?? 'Preferred Delivery Time'; ?>:</label>
-										<input type="datetime-local" name="preferred_time" class="form-control" required>
-									</div>
-									<div class="form-group">
-										<label><?php echo $lang['payment_method'] ?? 'Payment Method'; ?>:</label>
-										<select name="payment_method" class="form-control" required>
-											<option value="cash"><?php echo $lang['cash'] ?? 'Cash'; ?></option>
-											<option value="card"><?php echo $lang['card'] ?? 'Card'; ?></option>
-											<option value="bank_transfer"><?php echo $lang['bank_transfer'] ?? 'Bank Transfer'; ?></option>
-										</select>
-									</div>
-								</div>
-								<div id="drive-thru-fields" class="extra-fields">
-									<label><?php echo $lang['car_brand_name'] ?? 'Car Brand Name'; ?>:</label>
-									<input type="text" name="car_brand_name" class="form-control" required>
-									<label><?php echo $lang['car_color'] ?? 'Car Color'; ?>:</label>
-									<input type="text" name="car_color" class="form-control" required>
-									<label><?php echo $lang['car_tag_number'] ?? 'Car Tag Number'; ?>:</label>
-									<input type="text" name="car_tag_number" class="form-control" required>
-								</div>
-								<div id="contactless-fields" class="extra-fields">
-									<div class="form-group">
-										<label><?php echo $lang['address'] ?? 'Address'; ?>:</label>
-										<input type="text" name="address" class="form-control" required>
-									</div>
-									<div class="form-group">
-										<label><?php echo $lang['location'] ?? 'Location'; ?>:</label>
-										<div id="map-contactless" class="map-container"></div>
-										<input type="hidden" name="latitude" id="latitude-contactless">
-										<input type="hidden" name="longitude" id="longitude-contactless">
-									</div>
-									<div class="form-group">
-										<label><?php echo $lang['preferred_time'] ?? 'Preferred Delivery Time'; ?>:</label>
-										<input type="datetime-local" name="preferred_time" class="form-control" required>
-									</div>
-									<div class="form-group">
-										<label><?php echo $lang['payment_method'] ?? 'Payment Method'; ?>:</label>
-										<select name="payment_method" class="form-control" required>
-											<option value="cash"><?php echo $lang['cash'] ?? 'Cash'; ?></option>
-											<option value="card"><?php echo $lang['card'] ?? 'Card'; ?></option>
-											<option value="bank_transfer"><?php echo $lang['bank_transfer'] ?? 'Bank Transfer'; ?></option>
-										</select>
-									</div>
-								</div>
-								<div id="curbside-fields" class="extra-fields">
-									<label><?php echo $lang['car_brand_name'] ?? 'Car Brand Name'; ?>:</label>
-									<input type="text" name="car_brand_name" class="form-control" required>
-									<label><?php echo $lang['car_color'] ?? 'Car Color'; ?>:</label>
-									<input type="text" name="car_color" class="form-control" required>
-									<label><?php echo $lang['car_tag_number'] ?? 'Car Tag Number'; ?>:</label>
-									<input type="text" name="car_tag_number" class="form-control" required>
-									<div class="form-group">
-										<label><?php echo $lang['contact_number'] ?? 'Contact Number'; ?>:</label>
-										<input type="tel" name="contact_number" class="form-control" required>
-									</div>
-									<div class="form-group">
-										<label><?php echo $lang['preferred_time'] ?? 'Preferred Delivery Time'; ?>:</label>
-										<input type="datetime-local" name="preferred_time" class="form-control" required>
-									</div>
-									<div class="form-group">
-										<label><?php echo $lang['payment_method'] ?? 'Payment Method'; ?>:</label>
-										<select name="payment_method" class="form-control" required>
-											<option value="cash"><?php echo $lang['cash'] ?? 'Cash'; ?></option>
-											<option value="card"><?php echo $lang['card'] ?? 'Card'; ?></option>
-											<option value="bank_transfer"><?php echo $lang['bank_transfer'] ?? 'Bank Transfer'; ?></option>
-										</select>
-									</div>
-								</div>
-								<div class="button-container">
-									<button type="submit" name="place_order" class="btn btn-primary">
-										<i class="fas fa-check"></i> <?php echo $lang['place_order'] ?? 'Place Order'; ?>
-									</button>
-								</div>
-							</form>
-						<?php endif; ?>
+                                <div id="dine-in-fields" class="extra-fields">
+                                    <label for="table-number"><?php echo $lang['table_number'] ?? 'Table Number'; ?>:</label>
+                                    <input type="text" id="table-number" name="table_number" class="form-control" required>
+                                </div>
+                                <div id="delivery-fields" class="extra-fields">
+                                    <div class="form-group">
+                                        <label><?php echo $lang['address'] ?? 'Address'; ?>:</label>
+                                        <input type="text" name="address" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><?php echo $lang['location'] ?? 'Location'; ?>:</label>
+                                        <div id="map-delivery" class="map-container"></div>
+                                        <input type="hidden" name="latitude" id="latitude-delivery">
+                                        <input type="hidden" name="longitude" id="longitude-delivery">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><?php echo $lang['contact_number'] ?? 'Contact Number'; ?>:</label>
+                                        <input type="tel" name="contact_number" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><?php echo $lang['recipient_name'] ?? 'Recipient Name'; ?>:</label>
+                                        <input type="text" name="recipient_name" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><?php echo $lang['preferred_time'] ?? 'Preferred Delivery Time'; ?>:</label>
+                                        <input type="datetime-local" name="preferred_time" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><?php echo $lang['payment_method'] ?? 'Payment Method'; ?>:</label>
+                                        <select name="payment_method" class="form-control" required>
+                                            <option value="cash"><?php echo $lang['cash'] ?? 'Cash'; ?></option>
+                                            <option value="card"><?php echo $lang['card'] ?? 'Card'; ?></option>
+                                            <option value="bank_transfer"><?php echo $lang['bank_transfer'] ?? 'Bank Transfer'; ?></option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="takeaway-fields" class="extra-fields">
+                                    <div class="form-group">
+                                        <label><?php echo $lang['contact_number'] ?? 'Contact Number'; ?>:</label>
+                                        <input type="tel" name="contact_number" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><?php echo $lang['recipient_name'] ?? 'Recipient Name'; ?>:</label>
+                                        <input type="text" name="recipient_name" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><?php echo $lang['preferred_time'] ?? 'Preferred Delivery Time'; ?>:</label>
+                                        <input type="datetime-local" name="preferred_time" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><?php echo $lang['payment_method'] ?? 'Payment Method'; ?>:</label>
+                                        <select name="payment_method" class="form-control" required>
+                                            <option value="cash"><?php echo $lang['cash'] ?? 'Cash'; ?></option>
+                                            <option value="card"><?php echo $lang['card'] ?? 'Card'; ?></option>
+                                            <option value="bank_transfer"><?php echo $lang['bank_transfer'] ?? 'Bank Transfer'; ?></option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="drive-thru-fields" class="extra-fields">
+                                    <label><?php echo $lang['car_brand_name'] ?? 'Car Brand Name'; ?>:</label>
+                                    <input type="text" name="car_brand_name" class="form-control" required>
+                                    <label><?php echo $lang['car_color'] ?? 'Car Color'; ?>:</label>
+                                    <input type="text" name="car_color" class="form-control" required>
+                                    <label><?php echo $lang['car_tag_number'] ?? 'Car Tag Number'; ?>:</label>
+                                    <input type="text" name="car_tag_number" class="form-control" required>
+                                </div>
+                                <div id="contactless-fields" class="extra-fields">
+                                    <div class="form-group">
+                                        <label><?php echo $lang['address'] ?? 'Address'; ?>:</label>
+                                        <input type="text" name="address" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><?php echo $lang['location'] ?? 'Location'; ?>:</label>
+                                        <div id="map-contactless" class="map-container"></div>
+                                        <input type="hidden" name="latitude" id="latitude-contactless">
+                                        <input type="hidden" name="longitude" id="longitude-contactless">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><?php echo $lang['preferred_time'] ?? 'Preferred Delivery Time'; ?>:</label>
+                                        <input type="datetime-local" name="preferred_time" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><?php echo $lang['payment_method'] ?? 'Payment Method'; ?>:</label>
+                                        <select name="payment_method" class="form-control" required>
+                                            <option value="cash"><?php echo $lang['cash'] ?? 'Cash'; ?></option>
+                                            <option value="card"><?php echo $lang['card'] ?? 'Card'; ?></option>
+                                            <option value="bank_transfer"><?php echo $lang['bank_transfer'] ?? 'Bank Transfer'; ?></option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="curbside-fields" class="extra-fields">
+                                    <label><?php echo $lang['car_brand_name'] ?? 'Car Brand Name'; ?>:</label>
+                                    <input type="text" name="car_brand_name" class="form-control" required>
+                                    <label><?php echo $lang['car_color'] ?? 'Car Color'; ?>:</label>
+                                    <input type="text" name="car_color" class="form-control" required>
+                                    <label><?php echo $lang['car_tag_number'] ?? 'Car Tag Number'; ?>:</label>
+                                    <input type="text" name="car_tag_number" class="form-control" required>
+                                    <div class="form-group">
+                                        <label><?php echo $lang['contact_number'] ?? 'Contact Number'; ?>:</label>
+                                        <input type="tel" name="contact_number" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><?php echo $lang['preferred_time'] ?? 'Preferred Delivery Time'; ?>:</label>
+                                        <input type="datetime-local" name="preferred_time" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label><?php echo $lang['payment_method'] ?? 'Payment Method'; ?>:</label>
+                                        <select name="payment_method" class="form-control" required>
+                                            <option value="cash"><?php echo $lang['cash'] ?? 'Cash'; ?></option>
+                                            <option value="card"><?php echo $lang['card'] ?? 'Card'; ?></option>
+                                            <option value="bank_transfer"><?php echo $lang['bank_transfer'] ?? 'Bank Transfer'; ?></option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="button-container">
+                                    <button type="submit" name="place_order" class="btn btn-primary">
+                                        <i class="fas fa-check"></i> <?php echo $lang['place_order'] ?? 'Place Order'; ?>
+                                    </button>
+                                </div>
+                            </form>
+                        <?php endif; ?>
 
-						<?php if ($estimated_time): ?>
-							<div class="order-status mt-3">
-								<?php echo $lang['estimated_time'] ?? 'Estimated Delivery Time'; ?>: <?php echo $estimated_time; ?> <?php echo $lang['minutes'] ?? 'minutes'; ?>
-							</div>
-						<?php endif; ?>
-					</form>
-				</section>
-			<?php endif; ?>
-		</div>
+                        <?php if ($estimated_time): ?>
+                            <div class="order-status mt-3">
+                                <?php echo $lang['estimated_time'] ?? 'Estimated Delivery Time'; ?>: <?php echo $estimated_time; ?> <?php echo $lang['minutes'] ?? 'minutes'; ?>
+                            </div>
+                        <?php endif; ?>
+                    </form>
+                </section>
+            <?php endif; ?>
+        </div>
     </div>
 
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
     AOS.init();
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const dineInFields = document.getElementById('dine-in-fields');
-        const deliveryFields = document.getElementById('delivery-fields');
-        const takeawayFields = document.getElementById('takeaway-fields');
-        const drivethruFields = document.getElementById('drive-thru-fields');
-        const contactlessFields = document.getElementById('contactless-fields');
-        const curbsideFields = document.getElementById('curbside-fields');
-        const deliveryTypeInput = document.getElementById('delivery_type');
+document.addEventListener('DOMContentLoaded', function() {
+    const dineInFields = document.getElementById('dine-in-fields');
+    const deliveryFields = document.getElementById('delivery-fields');
+    const takeawayFields = document.getElementById('takeaway-fields');
+    const drivethruFields = document.getElementById('drive-thru-fields');
+    const contactlessFields = document.getElementById('contactless-fields');
+    const curbsideFields = document.getElementById('curbside-fields');
+    const deliveryTypeInput = document.getElementById('delivery_type');
 
-        let map = null;
-        let isMapInitializing = false;
+    let map = null;
+    let isMapInitializing = false;
 
-        if (!deliveryTypeInput || !dineInFields || !deliveryFields || !takeawayFields || !drivethruFields || !contactlessFields || !curbsideFields) {
-            console.error('One or more elements not found!');
-            return;
-        }
+    if (!deliveryTypeInput || !dineInFields || !deliveryFields || !takeawayFields || !drivethruFields || !contactlessFields || !curbsideFields) {
+        console.error('One or more elements not found!');
+        return;
+    }
 
-        const swiper = new Swiper('.delivery-carousel', {
-            slidesPerView: 'auto',
-            spaceBetween: 10,
-            navigation: {
-                nextEl: '.swiper-button-next',
-                prevEl: '.swiper-button-prev',
-            },
-            direction: 'horizontal',
-            freeMode: false,
-            grabCursor: true,
-            centeredSlides: false,
-            loop: false,
-            slidesOffsetBefore: 0,
-            slidesOffsetAfter: 0,
-            breakpoints: {
-                320: {
-                    slidesPerView: 2.5,
-                    spaceBetween: 8
-                },
-                768: {
-                    slidesPerView: 4,
-                    spaceBetween: 10
-                },
-                1024: {
-                    slidesPerView: 6,
-                    spaceBetween: 10
-                }
-            }
-        });
-
-        const deliveryOptions = document.querySelectorAll('.delivery-option');
-        deliveryOptions.forEach(option => {
-            option.addEventListener('click', function() {
-                deliveryOptions.forEach(opt => opt.classList.remove('active'));
-                this.classList.add('active');
-                const value = this.getAttribute('data-value');
-                deliveryTypeInput.value = value;
-                updateFields(value);
-                const slideIndex = Array.from(deliveryOptions).indexOf(this);
-                swiper.slideTo(slideIndex, 300);
-            });
-        });
-
-        function updateFields(value) {
-            dineInFields.style.display = 'none';
-            deliveryFields.style.display = 'none';
-            takeawayFields.style.display = 'none';
-            drivethruFields.style.display = 'none';
-            contactlessFields.style.display = 'none';
-            curbsideFields.style.display = 'none';
-
-            const allInputs = dineInFields.querySelectorAll('input, select');
-            const allDeliveryInputs = deliveryFields.querySelectorAll('input, select');
-            const allTakeawayInputs = takeawayFields.querySelectorAll('input, select');
-            const allDrivethruInputs = drivethruFields.querySelectorAll('input, select');
-            const allContactlessInputs = contactlessFields.querySelectorAll('input, select');
-            const allCurbsideInputs = curbsideFields.querySelectorAll('input, select');
-
-            allInputs.forEach(input => input.disabled = true);
-            allDeliveryInputs.forEach(input => input.disabled = true);
-            allTakeawayInputs.forEach(input => input.disabled = true);
-            allDrivethruInputs.forEach(input => input.disabled = true);
-            allContactlessInputs.forEach(input => input.disabled = true);
-            allCurbsideInputs.forEach(input => input.disabled = true);
-
-            if (value === 'dine-in') {
-                dineInFields.style.display = 'block';
-                allInputs.forEach(input => input.disabled = false);
-                clearMap();
-            } else if (value === 'delivery') {
-                deliveryFields.style.display = 'block';
-                allDeliveryInputs.forEach(input => input.disabled = false);
-                if (!map && !isMapInitializing) {
-                    setTimeout(() => {
-                        isMapInitializing = true;
-                        map = initMap('map-delivery');
-                        isMapInitializing = false;
-                    }, 100);
-                }
-            } else if (value === 'takeaway') {
-                takeawayFields.style.display = 'block';
-                allTakeawayInputs.forEach(input => input.disabled = false);
-                clearMap();
-            } else if (value === 'drive-thru') {
-                drivethruFields.style.display = 'block';
-                allDrivethruInputs.forEach(input => input.disabled = false);
-                clearMap();
-            } else if (value === 'contactless') {
-                contactlessFields.style.display = 'block';
-                allContactlessInputs.forEach(input => input.disabled = false);
-                if (!map && !isMapInitializing) {
-                    setTimeout(() => {
-                        isMapInitializing = true;
-                        map = initMap('map-contactless');
-                        isMapInitializing = false;
-                    }, 100);
-                }
-            } else if (value === 'curbside') {
-                curbsideFields.style.display = 'block';
-                allCurbsideInputs.forEach(input => input.disabled = false);
-                clearMap();
-            }
-        }
-
-        function clearMap() {
-            if (map && typeof map.remove === 'function') {
-                try {
-                    map.remove();
-                } catch (e) {
-                    console.warn('Error removing map:', e);
-                }
-                map = null;
-            }
-        }
-
-        function initMap(containerId) {
-            const mapContainer = document.getElementById(containerId);
-            if (!mapContainer) {
-                console.error(`Map container with id ${containerId} not found!`);
-                return null;
-            }
-
-            mapContainer.style.display = 'block';
-            mapContainer.style.height = '300px';
-            mapContainer.style.width = '100%';
-
-            if (mapContainer.offsetHeight === 0 || mapContainer.offsetWidth === 0) {
-                console.warn(`Map container ${containerId} has zero dimensions, retrying...`);
-                setTimeout(() => initMap(containerId), 100);
-                return null;
-            }
-
-            if (mapContainer._leaflet_id) {
-                console.log(`Removing existing map on ${containerId}`);
-                try {
-                    const leafletMaps = Object.values(L.Map._maps || {});
-                    for (let existingMap of leafletMaps) {
-                        if (existingMap._container === mapContainer && typeof existingMap.remove === 'function') {
-                            existingMap.remove();
-                        }
-                    }
-                    delete mapContainer._leaflet_id;
-                } catch (e) {
-                    console.warn(`Error while trying to remove existing map on ${containerId}:`, e);
-                }
-            }
-
-            let newMap = L.map(containerId);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(newMap);
-
-            const newMarker = L.marker([35.6892, 51.3890], { draggable: true }).addTo(newMap);
-            newMarker.on('dragend', function(event) {
-                const latlng = newMarker.getLatLng();
-                if (containerId === 'map-delivery') {
-                    const latInput = document.getElementById('latitude-delivery');
-                    const lngInput = document.getElementById('longitude-delivery');
-                    if (latInput && lngInput) {
-                        latInput.value = latlng.lat;
-                        lngInput.value = latlng.lng;
-                    }
-                } else if (containerId === 'map-contactless') {
-                    const latInput = document.getElementById('latitude-contactless');
-                    const lngInput = document.getElementById('longitude-contactless');
-                    if (latInput && lngInput) {
-                        latInput.value = latlng.lat;
-                        lngInput.value = latlng.lng;
-                    }
-                }
-            });
-
-            newMap.on('click', function(event) {
-                newMarker.setLatLng(event.latlng);
-                if (containerId === 'map-delivery') {
-                    const latInput = document.getElementById('latitude-delivery');
-                    const lngInput = document.getElementById('longitude-delivery');
-                    if (latInput && lngInput) {
-                        latInput.value = event.latlng.lat;
-                        lngInput.value = event.latlng.lng;
-                    }
-                } else if (containerId === 'map-contactless') {
-                    const latInput = document.getElementById('latitude-contactless');
-                    const lngInput = document.getElementById('longitude-contactless');
-                    if (latInput && lngInput) {
-                        latInput.value = event.latlng.lat;
-                        lngInput.value = event.latlng.lng;
-                    }
-                }
-            });
-
-            setTimeout(() => {
-                try {
-                    newMap.setView([35.6892, 51.3890], 12);
-                    if (navigator.geolocation) {
-                        navigator.geolocation.getCurrentPosition(
-                            (position) => {
-                                const userLocation = [position.coords.latitude, position.coords.longitude];
-                                newMap.setView(userLocation, 15);
-                                newMarker.setLatLng(userLocation);
-                            },
-                            (error) => {
-                                console.log("Geolocation error:", error);
-                            }
-                        );
-                    }
-                } catch (e) {
-                    console.error(`Error setting map view for ${containerId}:`, e);
-                }
-            }, 100);
-
-            return newMap;
-        }
-
-        const initialOption = document.querySelector('.delivery-option[data-value="dine-in"]');
-        if (initialOption) {
-            initialOption.classList.add('active');
-            deliveryTypeInput.value = 'dine-in';
-            updateFields('dine-in');
-        }
-
-        // مدیریت دکمه‌های افزایش و کاهش تعداد در موبایل
-        document.querySelectorAll('.quantity-control .increase').forEach(button => {
-            button.addEventListener('click', () => {
-                const input = document.getElementById(button.dataset.inputId);
-                let value = parseInt(input.value) || 0;
-                input.value = value + 1;
-            });
-        });
-
-        document.querySelectorAll('.quantity-control .decrease').forEach(button => {
-            button.addEventListener('click', () => {
-                const input = document.getElementById(button.dataset.inputId);
-                let value = parseInt(input.value) || 0;
-                if (value > 0) {
-                    input.value = value - 1;
-                }
-            });
+    const deliveryOptions = document.querySelectorAll('.delivery-option');
+    deliveryOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            deliveryOptions.forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            const value = this.getAttribute('data-value');
+            deliveryTypeInput.value = value;
+            updateFields(value);
         });
     });
+
+    function updateFields(value) {
+        dineInFields.style.display = 'none';
+        deliveryFields.style.display = 'none';
+        takeawayFields.style.display = 'none';
+        drivethruFields.style.display = 'none';
+        contactlessFields.style.display = 'none';
+        curbsideFields.style.display = 'none';
+
+        const allInputs = dineInFields.querySelectorAll('input, select');
+        const allDeliveryInputs = deliveryFields.querySelectorAll('input, select');
+        const allTakeawayInputs = takeawayFields.querySelectorAll('input, select');
+        const allDrivethruInputs = drivethruFields.querySelectorAll('input, select');
+        const allContactlessInputs = contactlessFields.querySelectorAll('input, select');
+        const allCurbsideInputs = curbsideFields.querySelectorAll('input, select');
+
+        allInputs.forEach(input => input.disabled = true);
+        allDeliveryInputs.forEach(input => input.disabled = true);
+        allTakeawayInputs.forEach(input => input.disabled = true);
+        allDrivethruInputs.forEach(input => input.disabled = true);
+        allContactlessInputs.forEach(input => input.disabled = true);
+        allCurbsideInputs.forEach(input => input.disabled = true);
+
+        if (value === 'dine-in') {
+            dineInFields.style.display = 'block';
+            allInputs.forEach(input => input.disabled = false);
+            clearMap();
+        } else if (value === 'delivery') {
+            deliveryFields.style.display = 'block';
+            allDeliveryInputs.forEach(input => input.disabled = false);
+            if (!map && !isMapInitializing) {
+                setTimeout(() => {
+                    isMapInitializing = true;
+                    map = initMap('map-delivery');
+                    isMapInitializing = false;
+                }, 100);
+            }
+        } else if (value === 'takeaway') {
+            takeawayFields.style.display = 'block';
+            allTakeawayInputs.forEach(input => input.disabled = false);
+            clearMap();
+        } else if (value === 'drive-thru') {
+            drivethruFields.style.display = 'block';
+            allDrivethruInputs.forEach(input => input.disabled = false);
+            clearMap();
+        } else if (value === 'contactless') {
+            contactlessFields.style.display = 'block';
+            allContactlessInputs.forEach(input => input.disabled = false);
+            if (!map && !isMapInitializing) {
+                setTimeout(() => {
+                    isMapInitializing = true;
+                    map = initMap('map-contactless');
+                    isMapInitializing = false;
+                }, 100);
+            }
+        } else if (value === 'curbside') {
+            curbsideFields.style.display = 'block';
+            allCurbsideInputs.forEach(input => input.disabled = false);
+            clearMap();
+        }
+    }
+
+    function clearMap() {
+        if (map && typeof map.remove === 'function') {
+            try {
+                map.remove();
+            } catch (e) {
+                console.warn('Error removing map:', e);
+            }
+            map = null;
+        }
+    }
+
+    function initMap(containerId) {
+        const mapContainer = document.getElementById(containerId);
+        if (!mapContainer) {
+            console.error(`Map container with id ${containerId} not found!`);
+            return null;
+        }
+
+        mapContainer.style.display = 'block';
+        mapContainer.style.height = '300px';
+        mapContainer.style.width = '100%';
+
+        if (mapContainer.offsetHeight === 0 || mapContainer.offsetWidth === 0) {
+            console.warn(`Map container ${containerId} has zero dimensions, retrying...`);
+            setTimeout(() => initMap(containerId), 100);
+            return null;
+        }
+
+        if (mapContainer._leaflet_id) {
+            console.log(`Removing existing map on ${containerId}`);
+            try {
+                const leafletMaps = Object.values(L.Map._maps || {});
+                for (let existingMap of leafletMaps) {
+                    if (existingMap._container === mapContainer && typeof existingMap.remove === 'function') {
+                        existingMap.remove();
+                    }
+                }
+                delete mapContainer._leaflet_id;
+            } catch (e) {
+                console.warn(`Error while trying to remove existing map on ${containerId}:`, e);
+            }
+        }
+
+        let newMap = L.map(containerId);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(newMap);
+
+        const newMarker = L.marker([35.6892, 51.3890], { draggable: true }).addTo(newMap);
+        newMarker.on('dragend', function(event) {
+            const latlng = newMarker.getLatLng();
+            if (containerId === 'map-delivery') {
+                const latInput = document.getElementById('latitude-delivery');
+                const lngInput = document.getElementById('longitude-delivery');
+                if (latInput && lngInput) {
+                    latInput.value = latlng.lat;
+                    lngInput.value = latlng.lng;
+                }
+            } else if (containerId === 'map-contactless') {
+                const latInput = document.getElementById('latitude-contactless');
+                const lngInput = document.getElementById('longitude-contactless');
+                if (latInput && lngInput) {
+                    latInput.value = latlng.lat;
+                    lngInput.value = latlng.lng;
+                }
+            }
+        });
+
+        newMap.on('click', function(event) {
+            newMarker.setLatLng(event.latlng);
+            if (containerId === 'map-delivery') {
+                const latInput = document.getElementById('latitude-delivery');
+                const lngInput = document.getElementById('longitude-delivery');
+                if (latInput && lngInput) {
+                    latInput.value = event.latlng.lat;
+                    lngInput.value = event.latlng.lng;
+                }
+            } else if (containerId === 'map-contactless') {
+                const latInput = document.getElementById('latitude-contactless');
+                const lngInput = document.getElementById('longitude-contactless');
+                if (latInput && lngInput) {
+                    latInput.value = event.latlng.lat;
+                    lngInput.value = event.latlng.lng;
+                }
+            }
+        });
+
+        setTimeout(() => {
+            try {
+                newMap.setView([35.6892, 51.3890], 12);
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const userLocation = [position.coords.latitude, position.coords.longitude];
+                            newMap.setView(userLocation, 15);
+                            newMarker.setLatLng(userLocation);
+                        },
+                        (error) => {
+                            console.log("Geolocation error:", error);
+                        }
+                    );
+                }
+            } catch (e) {
+                console.error(`Error setting map view for ${containerId}:`, e);
+            }
+        }, 100);
+
+        return newMap;
+    }
+
+    const initialOption = document.querySelector('.delivery-option[data-value="dine-in"]');
+    if (initialOption) {
+        initialOption.classList.add('active');
+        deliveryTypeInput.value = 'dine-in';
+        updateFields('dine-in');
+    }
+});
 </script>
 </body>
 </html>

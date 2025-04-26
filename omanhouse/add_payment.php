@@ -1,15 +1,18 @@
 <?php
 include 'db.php';
 
-$date = $_POST['date'];
-$payer = $_POST['payer'];
-$amount = floatval($_POST['amount']);
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $date = $_POST['date'];
+    $family = $_POST['family'];
+    $amount = $_POST['amount'];
+    $description = $_POST['description'];
 
-$sql = "INSERT INTO payments (date, payer, amount) VALUES ('$date', '$payer', '$amount')";
+    $stmt = $conn->prepare("INSERT INTO payments (date, family, amount, description) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssds", $date, $family, $amount, $description);
+    $stmt->execute();
+    $stmt->close();
 
-if ($conn->query($sql) === TRUE) {
     header("Location: payments.php");
-} else {
-    echo "خطا: " . $conn->error;
+    exit();
 }
 ?>
